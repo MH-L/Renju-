@@ -13,29 +13,22 @@ public abstract class AbstractBoard {
 	protected int[] colBased;
 	protected int[] ltorDiag;
 	protected int[] rtolDiag;
-	protected List<Integer> blackStones;
-	protected List<Integer> whiteStones;
 	protected int lastMove = invalid_location;
 	
 	public AbstractBoard() {
-		blackStones = new ArrayList<>();
-		whiteStones = new ArrayList<>();
 		rowBased = new int[height];
 		colBased = new int[width];
 		ltorDiag = new int[width + height - 1];
 		rtolDiag = new int[width + height - 1];
 	}
 	
-	public boolean withdrawLastMove() {
-		if (blackStones.size() > whiteStones.size())
-			blackStones.remove(blackStones.size() - 1);
-		else if (whiteStones.size() > 0)
-			whiteStones.remove(whiteStones.size() - 1);
-		else
-			return false;
-		return true;
-	}
-	
+	/**
+	 * Update board with given location: 00 for empty location,
+	 * 10 for white stone, 11 for black stone
+	 * @param location location of stone
+	 * @param first whether or not the player is first
+	 * @return True if update successful; false otherwise
+	 */
 	public boolean updateBoard(int location, boolean first) {
 		if (location < 0 || location >= invalid_location)
 			return false;
@@ -51,7 +44,7 @@ public abstract class AbstractBoard {
 		int indexOnLtoRDiag = ltorIndex < width ? rowIndex : colIndex;
 		int indexOnRtoLDiag = rtolIndex < width ? rowIndex : width - 1 - colIndex;
 
-		if ((rowIndex & (3 << (colIndex * 2))) != 0)
+		if ((origRow & (3 << (colIndex * 2))) != 0)
 			return false;
 		int stone = first ? sente_stone : gote_stone;
 
@@ -61,12 +54,56 @@ public abstract class AbstractBoard {
 		origCol = origCol ^ (stone << rowIndex * 2);
 		colBased[colIndex] = origCol;
 
-		origLtoRDiag = origLtoRDiag ^ (stone << rtolIndex * 2);
+		origLtoRDiag = origLtoRDiag ^ (stone << indexOnLtoRDiag * 2);
 		ltorDiag[ltorIndex] = origLtoRDiag;
 
-		origRtoLDiag = origRtoLDiag ^ (stone << ltorIndex * 2);
+		origRtoLDiag = origRtoLDiag ^ (stone << indexOnRtoLDiag * 2);
 		rtolDiag[rtolIndex] = origRtoLDiag;
 		
 		return true;
+	}
+	
+	public void reset() {
+		for (int i = 0; i < rowBased.length; i++) {
+			rowBased[i] = 0;
+		}
+		
+		for (int i = 0; i < colBased.length; i++) {
+			colBased[i] = 0;
+		}
+		
+		for (int i = 0; i < ltorDiag.length; i++) {
+			ltorDiag[i] = 0;
+		}
+		
+		for (int i = 0; i < rtolDiag.length; i++) {
+			rtolDiag[i] = 0;
+		}
+	}
+	
+	public void render() {
+		char firstPlayerChar = '\u25CF';
+		char secondPlayerChar = '\u25CB';
+		char emptyLocChar = '\u25A1';
+		System.out.println("   A B C D E F G H I J K L M N O");
+		for (int i = 0; i < rowBased.length; i++) {
+			System.out.print(i + 1);
+			int curRow = rowBased[i];
+			if (i < 9)
+				System.out.print("\u0020\u0020");
+			else
+				System.out.print("\u0020");
+			for (int j = 0; j < colBased.length; j++) {
+				int andingResult = curRow & (3 << (j * 2));
+				if (andingResult == (3 << (j * 2)))
+					System.out.print(firstPlayerChar + "\u0020");
+				else if (andingResult == (2 << (j * 2)))
+					System.out.print(secondPlayerChar + "\u0020");
+				else
+					System.out.print(emptyLocChar + "\u0020");
+			}
+			
+			System.out.println();
+		}
 	}
 }
