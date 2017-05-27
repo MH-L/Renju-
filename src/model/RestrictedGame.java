@@ -5,4 +5,3 @@ package model;
  */
 public class RestrictedGame {
 }
-
