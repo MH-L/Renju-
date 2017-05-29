@@ -2,6 +2,8 @@ package test;
 
 import static org.junit.Assert.*;
 
+import java.util.Set;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -73,6 +75,11 @@ public class UnrestrictedBoardTest {
 	
 	@Test
 	public void testNextMoves() {
-		
+		bd.updateBoard(0, true);
+		bd.updateBoard(16, true);
+		bd.updateBoard(208, true);
+		bd.render();
+		Set<Integer> nextMoves = bd.nextMoves();
+		assertFalse(nextMoves.contains(0));
 	}
 }

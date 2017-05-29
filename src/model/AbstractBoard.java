@@ -394,7 +394,8 @@ public abstract class AbstractBoard {
 					if (c >= width || c < 0)
 						continue;
 					if ((Math.abs(r - rowNum) == 1 && Math.abs(c - colNum) == 2)
-							|| (Math.abs(r - rowNum) == 2 && Math.abs(c - colNum) == 1))
+							|| (Math.abs(r - rowNum) == 2 && Math.abs(c - colNum) == 1)
+							|| (c == colNum && r == rowNum))
 						continue;
 					returnVal.add(r * width + c);
 				}
@@ -404,8 +405,8 @@ public abstract class AbstractBoard {
 		}
 	}
 	
-	public Set<Integer> nextMoves(boolean first) {
-		List<Integer> allStones = allStonesOnBoard(first);
+	public Set<Integer> nextMoves() {
+		List<Integer> allStones = allStonesOnBoard();
 		Set<Integer> ret = new HashSet<>();
 		for (int stone : allStones) {
 			for (int adj : adjacentMap.get(stone)) {
@@ -417,17 +418,57 @@ public abstract class AbstractBoard {
 		return ret;
 	}
 	
-	private List<Integer> allStonesOnBoard(boolean first) {
-		char stone = first ? '3' : '2';
+	private List<Integer> allStonesOnBoard() {
 		List<Integer> returnVal = new ArrayList<>();
 		for (int i = 0; i < rowBased.length; i++) {
 			String b4s = Integer.toString(rowBased[i], 4);
 			for (int j = 0; j < b4s.length(); j++) {
-				if (b4s.charAt(j) == stone)
-					returnVal.add(i*width + j);
+				if (b4s.charAt(j) != '0')
+					returnVal.add(i*width + b4s.length() - 1 - j);
 			}
 		}
 		
 		return returnVal;
+	}
+	
+	public int getltorDiagIndex(int position) {
+		int rowIndex = position / width;
+		int colIndex = position % width;
+		return rowIndex - colIndex + width - 1;
+	}
+	
+	public int getrtolDiagIndex(int position) {
+		int rowIndex = position / width;
+		int colIndex = position % width;
+		return rowIndex + colIndex;
+	}
+	
+	public int getIndexOnLtoR(int position) {
+		int rowIndex = position / width;
+		int colIndex = position % width;
+		int ltorIdx = getltorDiagIndex(position);
+		return ltorIdx < width ? rowIndex : colIndex;
+	}
+	
+	public int getIndexOnRtoL(int position) {
+		int rowIndex = position / width;
+		int colIndex = position % width;
+		int rtolIdx = getrtolDiagIndex(position);
+		return rtolIdx < width ? rowIndex : width - 1 - colIndex;
+	}
+	
+	public void withdrawMove(int move) {
+		if (move < 0 || move >= width * height)
+			return;
+		int rowIndex = move / width;
+		int colIndex = move % width;
+		int ltorIdx = getltorDiagIndex(move);
+		int rtolIdx = getrtolDiagIndex(move);
+		int indexOnLtoRDiag = ltorIdx < width ? rowIndex : colIndex;
+		int indexOnRtoLDiag = rtolIdx < width ? rowIndex : width - 1 - colIndex;
+		rowBased[rowIndex] &= (-1 - 3 << (colIndex * 2));
+		colBased[colIndex] &= (-1 - 3 << (rowIndex * 2));
+		rtolDiag[rtolIdx] &= (-1 - 3 << (indexOnRtoLDiag * 2));
+		ltorDiag[ltorIdx] &= (-1 - 3 << (indexOnLtoRDiag * 2));
 	}
 }
