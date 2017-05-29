@@ -50,26 +50,26 @@ public class UnrestrictedBoardTest {
 		bd.updateBoard(32, true);
 		bd.updateBoard(46, true);
 		bd.updateBoard(60, true);
-		assertEquals(1000000, bd.evaluateBoard(true));
+		assertEquals(1000000, bd.evaluateBoard());
 		bd.render();
 		bd.reset();
 		bd.updateBoard(4, true);
 		bd.updateBoard(18, true);
 		bd.updateBoard(32, true);
-		assertEquals(4, bd.evaluateBoard(true));
+		assertEquals(4, bd.evaluateBoard());
 		bd.updateBoard(46, true);
-		assertEquals(15, bd.evaluateBoard(true));
+		assertEquals(15, bd.evaluateBoard());
 		bd.reset();
 		bd.render();
 		bd.updateBoard(4, true);
 		bd.updateBoard(18, true);
 		bd.updateBoard(32, true);
 		bd.updateBoard(60, true);
-		assertEquals(20, bd.evaluateBoard(true));
+		assertEquals(13, bd.evaluateBoard());
 		bd.updateBoard(46, false);
-		assertEquals(0, bd.evaluateBoard(true));
+		assertEquals(0, bd.evaluateBoard());
 		bd.updateBoard(33, true);
-		assertEquals(5, bd.evaluateBoard(true));
+		assertEquals(5, bd.evaluateBoard());
 		bd.render();
 	}
 	
@@ -81,5 +81,14 @@ public class UnrestrictedBoardTest {
 		bd.render();
 		Set<Integer> nextMoves = bd.nextMoves();
 		assertFalse(nextMoves.contains(0));
+	}
+	
+	@Test
+	public void withdrawalTest() {
+		bd.updateBoard(16, true);
+		bd.updateBoard(17, false);
+		bd.updateBoard(27, true);
+		bd.withdrawMove(16);
+		bd.render();
 	}
 }

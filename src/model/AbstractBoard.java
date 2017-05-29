@@ -19,7 +19,8 @@ public abstract class AbstractBoard {
 	protected static final int open_four = 8000;
 	protected static final int three_four = 2000;
 	protected static final int four_four = 2000;
-	protected static final int jump_four = 20;
+	protected static final int ojump_four = 20;
+	protected static final int jump_four = 13;
 	protected static final int closed_four = 15;
 	protected static final int three_three = 200;
 	protected static final int open_three = 10;
@@ -48,7 +49,7 @@ public abstract class AbstractBoard {
 		ltorDiag = new int[width + height - 1];
 		rtolDiag = new int[width + height - 1];
 		adjacentMap = new HashMap<>();
-		generateAdjacentMoves();
+		genAdjMovesReduced();
 	}
 	
 	/**
@@ -137,21 +138,18 @@ public abstract class AbstractBoard {
 		}
 	}
 	
-	public int evaluateBoard(boolean first) {
+	public int evaluateBoard() {
+		return evaluateBoardPV(true) - evaluateBoardPV(false);
+	}
+	
+	public int evaluateBoardPV(boolean first) {
 		int curScore = 0;
 		// hasnone - 0, has3 - 1, has4 - 2; has33 - 3
 		// has34 or has44 - 4
 		int curStatus = 0;
-		int oppStatus = 0;
 		int[] kind = new int[]{0};
-		int[] kind_ = new int[]{0};
 		for (int i = 0; i < rowBased.length; i++) {
 			curScore += evaluateLine(rowBased[i], width, first, kind);
-			curScore -= evaluateLine(rowBased[i], width, !first, kind_);
-			if (oppStatus == 0 && kind_[0] == has_three)
-				oppStatus = 1;
-			else if (kind_[0] == has_four)
-				oppStatus = 2;
 			if (curStatus == 0) {
 				if (kind[0] == has_three)
 					curStatus = 1;
@@ -174,11 +172,6 @@ public abstract class AbstractBoard {
 		
 		for (int i = 0; i < colBased.length; i++) {
 			curScore += evaluateLine(colBased[i], height, first, kind);
-			curScore -= evaluateLine(colBased[i], height, !first, kind_);
-			if (oppStatus == 0 && kind_[0] == has_three)
-				oppStatus = 1;
-			else if (kind_[0] == has_four)
-				oppStatus = 2;
 			if (curStatus == 0) {
 				if (kind[0] == has_three)
 					curStatus = 1;
@@ -202,12 +195,6 @@ public abstract class AbstractBoard {
 		for (int i = 0; i < ltorDiag.length; i++) {
 			curScore += evaluateLine(ltorDiag[i], 
 					Math.min(i + 1, width + height - 1 - i), first, kind);
-			curScore -= evaluateLine(ltorDiag[i], 
-					Math.min(i + 1, width + height - 1 - i), !first, kind_);
-			if (oppStatus == 0 && kind_[0] == has_three)
-				oppStatus = 1;
-			else if (kind_[0] == has_four)
-				oppStatus = 2;
 			if (curStatus == 0) {
 				if (kind[0] == has_three)
 					curStatus = 1;
@@ -231,12 +218,6 @@ public abstract class AbstractBoard {
 		for (int i = 0; i < rtolDiag.length; i++) {
 			curScore += evaluateLine(rtolDiag[i], 
 					Math.min(i + 1, width + height - 1 - i), first, kind);
-			curScore -= evaluateLine(rtolDiag[i], 
-					Math.min(i + 1, width + height - 1 - i), !first, kind_);
-			if (oppStatus == 0 && kind_[0] == has_three)
-				oppStatus = 1;
-			else if (kind_[0] == has_four)
-				oppStatus = 2;
 			if (curStatus == 0) {
 				if (kind[0] == has_three)
 					curStatus = 1;
@@ -290,6 +271,8 @@ public abstract class AbstractBoard {
 		String patJumpFour1 = first ? "33033" : "22022";
 		String patJumpFour2 = first ? "30333" : "20222";
 		String patJumpFour3 = first ? "33303" : "22202";
+		String patOJumpFour1 = first ? "303330" : "202220";
+		String patOJumpFour2 = first ? "033303" : "022202";
 		String patClosedFour1 = first ? "33033" : "22022";
 		String patClosedFour2 = first ? "33033" : "22022";
 		String patClosedFourEnd = first ? "03333" : "02222";
@@ -312,7 +295,9 @@ public abstract class AbstractBoard {
 			return open_four;
 		
 		// For open/jump three's and four's -- no double counting (impossible in real games)
-		if (base4Str.contains(patJumpFour1) || base4Str.contains(patJumpFour2) ||
+		if (base4Str.contains(patOJumpFour1) || base4Str.contains(patOJumpFour2))
+			curScore += ojump_four;
+		else if (base4Str.contains(patJumpFour1) || base4Str.contains(patJumpFour2) ||
 				base4Str.contains(patJumpFour3))
 			curScore += jump_four;
 		else if (base4Str.contains(patClosedFour1) || base4Str.contains(patClosedFour2)
@@ -378,6 +363,29 @@ public abstract class AbstractBoard {
 	private boolean isSquareEmpty(int position) {
 		return position >= 0 && position < width * height && 
 				((rowBased[position / width]) >> (position % width * 2)) % 4 == 0;
+	}
+	
+	private void genAdjMovesReduced() {
+		for (int position = 0; position < width*height; position++) {
+			List<Integer> returnVal = new ArrayList<>();
+			int rowNum = position / width;
+			int colNum = position % width;
+			List<Integer> xcoords = Arrays.asList(colNum, colNum-1, colNum+1);
+			List<Integer> ycoords = Arrays.asList(rowNum, rowNum-1, rowNum+1);
+			for (int r : ycoords) {
+				if (r >= height || r < 0)
+					continue;
+				for (int c : xcoords) {
+					if (c >= width || c < 0)
+						continue;
+					if ((c == colNum && r == rowNum))
+						continue;
+					returnVal.add(r * width + c);
+				}
+			}
+			
+			adjacentMap.put(position, returnVal);
+		}
 	}
 	
 	private void generateAdjacentMoves() {
@@ -458,6 +466,7 @@ public abstract class AbstractBoard {
 	}
 	
 	public void withdrawMove(int move) {
+		// TODO buggy
 		if (move < 0 || move >= width * height)
 			return;
 		int rowIndex = move / width;
@@ -466,9 +475,9 @@ public abstract class AbstractBoard {
 		int rtolIdx = getrtolDiagIndex(move);
 		int indexOnLtoRDiag = ltorIdx < width ? rowIndex : colIndex;
 		int indexOnRtoLDiag = rtolIdx < width ? rowIndex : width - 1 - colIndex;
-		rowBased[rowIndex] &= (-1 - 3 << (colIndex * 2));
-		colBased[colIndex] &= (-1 - 3 << (rowIndex * 2));
-		rtolDiag[rtolIdx] &= (-1 - 3 << (indexOnRtoLDiag * 2));
-		ltorDiag[ltorIdx] &= (-1 - 3 << (indexOnLtoRDiag * 2));
+		rowBased[rowIndex] &= (-1 - (3 << (colIndex * 2)));
+		colBased[colIndex] &= (-1 - (3 << (rowIndex * 2)));
+		rtolDiag[rtolIdx] &= (-1 - (3 << (indexOnRtoLDiag * 2)));
+		ltorDiag[ltorIdx] &= (-1 - (3 << (indexOnLtoRDiag * 2)));
 	}
 }
