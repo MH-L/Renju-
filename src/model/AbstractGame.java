@@ -6,10 +6,7 @@ import java.awt.Font;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -20,9 +17,10 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
-import javax.swing.filechooser.FileFilter;
 
-public class AbstractGame {
+import graphics.BoardGraphics;
+
+public abstract class AbstractGame {
 	protected static final Font smallGameFont = new Font("Open Sans",
 			Font.PLAIN, 28);
 	protected static final Font largeGameFont = new Font("Open Sans",
@@ -37,9 +35,6 @@ public class AbstractGame {
 			760);
 	public static final Dimension defaultFrameSmall = new Dimension(700, 500);
 	public static final int functionPanelWidth = 295;
-	public static final int NUM_STONE_TO_WIN = 5;
-	public static final int TURN_SENTE = 1;
-	public static final int TURN_GOTE = 2;
 	protected JPanel mainPanel;
 	protected JPanel parentPanel;
 	protected JPanel chatPanel;
@@ -54,10 +49,11 @@ public class AbstractGame {
 	protected JPanel functionPanel;
 	private JLabel gameStarted;
 	protected JTextArea messageArea;
-	protected AbstractBoard board;
+	protected BoardGraphics bg;
 	
 	protected AbstractPlayer player1;
 	protected AbstractPlayer player2;
+	protected boolean isPlayerTurn = false;
 	
 	public enum Difficulty {
 		novice, intermediate, advanced, ultimate;
@@ -179,8 +175,14 @@ public class AbstractGame {
 	}
 	
 	protected void gameStart() {
-		board.reset();
-		board.activate();
+		bg.reset();
+		bg.activate();
 		gameStarted.setText("Game Started.");
 	}
+	
+	public boolean playerCanMove() {
+		return isPlayerTurn;
+	}
+	
+	public abstract void updateTurnStatus();
 }

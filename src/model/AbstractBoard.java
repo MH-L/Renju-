@@ -9,9 +9,11 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import graphics.BoardGraphics;
+
 public abstract class AbstractBoard {
-	protected static final int width = 15;
-	protected static final int height = 15;
+	public static final int width = 15;
+	public static final int height = 15;
 	protected static final int invalid_location = 225;
 	protected static final int sente_stone = 3;
 	protected static final int gote_stone = 2;
@@ -41,7 +43,6 @@ public abstract class AbstractBoard {
 	protected int[] ltorDiag;
 	protected int[] rtolDiag;
 	protected int lastMove = invalid_location;
-	private boolean activated = false;
 	
 	protected Map<Integer, List<Integer>> adjacentMap;
 	
@@ -363,14 +364,6 @@ public abstract class AbstractBoard {
 //				+ bigJumpTwoCount * big_jump_two;
 			
 		return curScore;
-	}
-	
-	public void activate() {
-		activated = true;
-	}
-	
-	public void freeze() {
-		activated = false;
 	}
 	
 	private boolean isSquareEmpty(int position) {

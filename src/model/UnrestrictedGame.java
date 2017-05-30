@@ -9,4 +9,9 @@ public class UnrestrictedGame extends AbstractGame {
 			playerFirst = true;
 		
 	}
+
+	@Override
+	public void updateTurnStatus() {
+		isPlayerTurn = !isPlayerTurn;
+	}
 }
