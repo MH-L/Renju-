@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 public abstract class AbstractBoard {
@@ -40,6 +41,7 @@ public abstract class AbstractBoard {
 	protected int[] ltorDiag;
 	protected int[] rtolDiag;
 	protected int lastMove = invalid_location;
+	private boolean activated = false;
 	
 	protected Map<Integer, List<Integer>> adjacentMap;
 	
@@ -255,6 +257,9 @@ public abstract class AbstractBoard {
 		if (numPos < 5)
 			return 0;
 		
+		if (true)
+			return new Random().nextInt(21) - 10;
+		
 		String base4Str = Integer.toString(line, 4);
 		while (base4Str.length() < numPos) {
 			base4Str = '0' + base4Str;
@@ -264,10 +269,6 @@ public abstract class AbstractBoard {
 		String patFive = first ? "33333" : "22222";
 		String patOpenFour = first ? "033330" : "022220";
 		String patSpecial = first ? "3033303" : "2022202";
-		String patOpenThree1 = first ? "003330" : "002220";
-		String patOpenThree2 = first ? "033300" : "022200";
-		String patJumpThree1 = first ? "033030" : "022020";
-		String patJumpThree2 = first ? "030330" : "020220";
 		String patJumpFour1 = first ? "33033" : "22022";
 		String patJumpFour2 = first ? "30333" : "20222";
 		String patJumpFour3 = first ? "33303" : "22202";
@@ -277,15 +278,19 @@ public abstract class AbstractBoard {
 		String patClosedFour2 = first ? "33033" : "22022";
 		String patClosedFourEnd = first ? "03333" : "02222";
 		String patClosedFourStart = first ? "33330" : "22220";
-		
-		// TODO consider closed jump 3
-		String patClosedThree1 = first ? "003332" : "002223";
-		String patClosedThree2 = first ? "233300" : "322200";
-		String patClosedThreeEnd = first ? "00333" : "00222";
-		String patClosedThreeStart = first ? "33300" : "22200";
-		String patOpenTwo = first ? "003300" : "002200";
-		String patSJTwo = first ? "0030300" : "0020200";
-		String patBJTwo = first ? "030030" : "020020";
+		String patOpenThree1 = first ? "003330" : "002220";
+		String patOpenThree2 = first ? "033300" : "022200";
+		String patJumpThree1 = first ? "033030" : "022020";
+		String patJumpThree2 = first ? "030330" : "020220";
+//		
+//		// TODO consider closed jump 3
+//		String patClosedThree1 = first ? "003332" : "002223";
+//		String patClosedThree2 = first ? "233300" : "322200";
+//		String patClosedThreeEnd = first ? "00333" : "00222";
+//		String patClosedThreeStart = first ? "33300" : "22200";
+//		String patOpenTwo = first ? "003300" : "002200";
+//		String patSJTwo = first ? "0030300" : "0020200";
+//		String patBJTwo = first ? "030030" : "020020";
 		
 		// If already won or will be winning, return corresponding scores
 		// "X0XXX0X" is a special kind, which counts as an open four
@@ -317,47 +322,55 @@ public abstract class AbstractBoard {
 		else
 			criticalKind[0] = has_none;
 		
-		int closedThreeCount = 0, startPos = 0;
-		if (base4Str.startsWith(patClosedThreeStart) || base4Str.endsWith(patClosedThreeEnd))
-			closedThreeCount ++;
-		while ((startPos = base4Str.indexOf(patClosedThree1, startPos)) != -1) {
-			startPos ++;
-			closedThreeCount ++;
-		}
-		
-		startPos = 0;
-		while ((startPos = base4Str.indexOf(patClosedThree2, startPos)) != -1) {
-			startPos ++;
-			closedThreeCount ++;
-		}
-		curScore += closedThreeCount * closed_three;
-		
-		startPos = 0;
-		int openTwoCount = 0;
-		// TODO revise the definition of "open two"
-		while ((startPos = base4Str.indexOf(patOpenTwo, startPos)) != -1) {
-			startPos ++;
-			openTwoCount ++;
-		}
-		
-		startPos = 0;
-		int smallJumpTwoCount = 0;
-		while ((startPos = base4Str.indexOf(patSJTwo, startPos)) != -1) {
-			startPos ++;
-			smallJumpTwoCount ++;
-		}
-		
-		startPos = 0;
-		int bigJumpTwoCount = 0;
-		while ((startPos = base4Str.indexOf(patBJTwo, startPos)) != -1) {
-			startPos ++;
-			bigJumpTwoCount ++;
-		}
-		
-		curScore += openTwoCount * open_two + smallJumpTwoCount * small_jump_two
-				+ bigJumpTwoCount * big_jump_two;
+//		int closedThreeCount = 0, startPos = 0;
+//		if (base4Str.startsWith(patClosedThreeStart) || base4Str.endsWith(patClosedThreeEnd))
+//			closedThreeCount ++;
+//		while ((startPos = base4Str.indexOf(patClosedThree1, startPos)) != -1) {
+//			startPos ++;
+//			closedThreeCount ++;
+//		}
+//		
+//		startPos = 0;
+//		while ((startPos = base4Str.indexOf(patClosedThree2, startPos)) != -1) {
+//			startPos ++;
+//			closedThreeCount ++;
+//		}
+//		curScore += closedThreeCount * closed_three;
+//		
+//		startPos = 0;
+//		int openTwoCount = 0;
+//		// TODO revise the definition of "open two"
+//		while ((startPos = base4Str.indexOf(patOpenTwo, startPos)) != -1) {
+//			startPos ++;
+//			openTwoCount ++;
+//		}
+//		
+//		startPos = 0;
+//		int smallJumpTwoCount = 0;
+//		while ((startPos = base4Str.indexOf(patSJTwo, startPos)) != -1) {
+//			startPos ++;
+//			smallJumpTwoCount ++;
+//		}
+//		
+//		startPos = 0;
+//		int bigJumpTwoCount = 0;
+//		while ((startPos = base4Str.indexOf(patBJTwo, startPos)) != -1) {
+//			startPos ++;
+//			bigJumpTwoCount ++;
+//		}
+//		
+//		curScore += openTwoCount * open_two + smallJumpTwoCount * small_jump_two
+//				+ bigJumpTwoCount * big_jump_two;
 			
 		return curScore;
+	}
+	
+	public void activate() {
+		activated = true;
+	}
+	
+	public void freeze() {
+		activated = false;
 	}
 	
 	private boolean isSquareEmpty(int position) {

@@ -32,7 +32,7 @@ public class BoardTreeTest {
 		bd.withdrawMove(145);
 		bd.render();
 		System.out.println(bd.evaluateBoard());
-		int move = BoardTree.alphaBeta(bd, 5, Integer.MIN_VALUE, 
+		int move = BoardTree.alphaBeta(bd, 6, Integer.MIN_VALUE, 
 				Integer.MAX_VALUE, true, new int[]{0});
 		System.out.println(move);
 		System.out.println(BoardTree.nodesNum);
