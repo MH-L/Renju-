@@ -1,8 +1,10 @@
 package model;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
+import javax.swing.WindowConstants;
 
 import graphics.BoardGraphics;
 
@@ -64,7 +67,54 @@ public abstract class AbstractGame {
 	}
 	
 	public AbstractGame() {
-		
+		parentPanel = new JPanel(new BorderLayout());
+		chatPanel = new JPanel(new BorderLayout());
+		chatPanel.setPreferredSize(new Dimension(395, 700));
+		mainPanel = new JPanel(new BorderLayout());
+		mainFrame = new JFrame("Gomoku Plus");
+		mainFrame.setSize(defaultFrameDimension);
+		btnStart = Main.getPlainLookbtn("Start!", "Open Sans", 23, Font.PLAIN, Color.CYAN);
+		btnGiveUp = Main.getPlainLookbtn("Give UP!", "Open Sans", 23, Font.PLAIN, Color.RED);
+		btnStart.setMargin(emptyMargin);
+		btnGiveUp.setMargin(emptyMargin);
+		parentPanel.add(mainPanel, BorderLayout.WEST);
+		parentPanel.add(new JSeparator());
+		parentPanel.add(chatPanel, BorderLayout.EAST);
+		mainFrame.add(parentPanel);
+		mainFrame.setVisible(true);
+		mainFrame.setResizable(false);
+		mainFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		addCloseConfirmation(mainFrame);
+
+		functionPanel = new JPanel(new BorderLayout());
+		functionPanel.setPreferredSize(new Dimension(functionPanelWidth, 700));
+		buttonPanel = new JPanel(new GridLayout(2, 2));
+		buttonPanel.setPreferredSize(new Dimension(functionPanelWidth, 200));
+		titlePanel = new JPanel();
+		titlePanel.setPreferredSize(new Dimension(functionPanelWidth, 100));
+		historyPanel = new JPanel(new GridLayout(4, 1));
+		functionPanel.add(titlePanel, BorderLayout.NORTH);
+		functionPanel.add(historyPanel, BorderLayout.CENTER);
+		functionPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+		gameStarted = new JLabel("Game not yet started.");
+		gameStarted.setFont(smallGameFont);
+		historyPanel.add(gameStarted);
+
+		boardPanel = new JPanel(new GridLayout(AbstractBoard.height,AbstractBoard.width));
+		boardPanel.setPreferredSize(new Dimension(700, 700));
+
+		menuBar = createJMenuBar();
+		mainFrame.setJMenuBar(menuBar);
+		buttonPanel.add(btnStart);
+		buttonPanel.add(btnGiveUp);
+		mainPanel.add(boardPanel, BorderLayout.LINE_START);
+		mainPanel.add(new JSeparator(SwingConstants.VERTICAL));
+		mainPanel.add(functionPanel, BorderLayout.LINE_END);
+
+		messageArea = new JTextArea(4, 40);
+		messageArea.setFont(smallGameFont);
+		chatPanel.add(messageArea, BorderLayout.CENTER);
 	}
 	
 	private JMenuBar createJMenuBar() {
