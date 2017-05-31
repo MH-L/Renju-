@@ -9,11 +9,12 @@ public class UnrestrictedGame extends AbstractGame {
 	public UnrestrictedGame(boolean playerFirst, Difficulty diff) {
 		super();
 		this.playerFirst = playerFirst;
-		
+		bg.setupBoard(new UnrestrictedBoard());
 	}
 
 	@Override
 	public void updateTurnStatus() {
+		activePlayer = !activePlayer;
 		isPlayerTurn = !isPlayerTurn;
 	}
 }

@@ -1,14 +1,21 @@
 package graphics;
 
 import java.awt.Color;
+import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import model.AbstractBoard;
 import model.AbstractGame;
+import model.UnrestrictedBoard;
 
 public class BoardGraphics extends JPanel {
 
@@ -23,16 +30,16 @@ public class BoardGraphics extends JPanel {
 	private boolean activated = false;
 	private Coordinate[][] grid;
 	
-	public BoardGraphics(int height, int width) {
-		super();
+	public BoardGraphics(int height, int width, AbstractGame game) {
+		super(new GridLayout(height, width));
 		this.height = height;
 		this.width = width;
 		grid = new Coordinate[width][height];
+		addCellsToBoard();
+		this.game = game;
 	}
 	
 	protected void addCellsToBoard() {
-		// TODO implement the case where suspension is required (for
-		// single player game exclusively).
 		setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
 		for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
@@ -46,67 +53,29 @@ public class BoardGraphics extends JPanel {
 							game.warnGameFrozen();
 							return;
 						}
-//						if (square.isUnoccupied()) {
-//							if (suspensionRequired) {
-//								// First check if it is player's turn
-//								if (!((SingleplayerGame) g).playerCanMove(activePlayer)) {
-//									g.warnNotYourTurn();
-//									return;
-//								}
-//								// Second, if player is allowed to take turn, update the board.
-//								// TODO now the player can only be SENTE, not gote.
-//								if (!((SingleplayerGame) g).updateBoardForAI
-//										(square.getXCoord(), square.getYCoord(), true)) {
-//									g.errorRendering();
-//								}
-//								Image img;
-//								try {
-//									if (activePlayer == Game.TURN_SENTE) {
-//										img = ImageIO.read(getClass().getResource("/images/occupied.png"));
-//									} else {
-//										img = ImageIO.read(getClass().getResource("/images/occ.png"));
-//									}
-//									square.setStone(activePlayer == Game.TURN_SENTE);
-//									square.setIcon(new ImageIcon(img));
-//									stoneCount++;
-//								} catch (IOException ee) {
-//									g.errorRendering();
-//								}
-//								if (doEndGameCheck()) {
-//									return;
-//								}
-//								updateActivePlayer();
-//								System.out.println("Setting ai turn to true.");
-//								updateIsAITurn(true);
-//								return;
-//							} else {
-//								if (activePlayer == Game.TURN_SENTE) {
-//									try {
-//										Image img = ImageIO.read(getClass().getResource("/images/occupied.png"));
-//										square.setIcon(new ImageIcon(img));
-//									} catch (IOException e1) {
-//										g.errorRendering();
-//									}
-//									square.setStone(true);
-//									updateActivePlayer();
-//								} else {
-//									try {
-//										Image img = ImageIO.read(getClass().getResource("/images/occ.png"));
-//										square.setIcon(new ImageIcon(img));
-//									} catch (IOException e1) {
-//										g.errorRendering();
-//									}
-//									square.setStone(false);
-//									updateActivePlayer();
-//								}
-//								lastMove2 = lastMove1;
-//								lastMove1 = square;
-//								stoneCount++;
-//							}
-//						} else {
-//							g.displayOccupiedWarning();
-//						}
-//						doEndGameCheck();
+						if (square.isUnoccupied()) {
+							if (game.isBlackActive()) {
+								try {
+									Image img = ImageIO.read(getClass().getResource("/images/occupied.png"));
+									square.setIcon(new ImageIcon(img));
+								} catch (IOException e1) {
+									game.errorRendering();
+								}
+								square.setStone(true);
+								game.updateTurnStatus();
+							} else {
+								try {
+									Image img = ImageIO.read(getClass().getResource("/images/occ.png"));
+									square.setIcon(new ImageIcon(img));
+								} catch (IOException e1) {
+									game.errorRendering();
+								}
+								square.setStone(false);
+								game.updateTurnStatus();
+							}
+						} else {
+							game.displayOccupiedWarning();
+						}
 					}
 				});
 				add(square);
@@ -191,5 +160,9 @@ public class BoardGraphics extends JPanel {
 			this.stone = Stone.UNOCCUPIED;
 			this.setIcon(null);
 		}
+	}
+
+	public void setupBoard(AbstractBoard bd) {
+		this.bd = bd;
 	}
 }

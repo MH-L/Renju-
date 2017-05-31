@@ -46,7 +46,6 @@ public abstract class AbstractGame {
 	protected JButton btnGiveUp;
 	protected JPanel titlePanel;
 	protected JMenuBar menuBar;
-	protected JPanel boardPanel;
 	protected JPanel historyPanel;
 	protected JPanel buttonPanel;
 	protected JPanel functionPanel;
@@ -57,6 +56,7 @@ public abstract class AbstractGame {
 	protected AbstractPlayer player1;
 	protected AbstractPlayer player2;
 	protected boolean isPlayerTurn = false;
+	protected boolean activePlayer = true;
 	
 	public enum Difficulty {
 		novice, intermediate, advanced, ultimate;
@@ -101,20 +101,36 @@ public abstract class AbstractGame {
 		gameStarted.setFont(smallGameFont);
 		historyPanel.add(gameStarted);
 
-		boardPanel = new JPanel(new GridLayout(AbstractBoard.height,AbstractBoard.width));
-		boardPanel.setPreferredSize(new Dimension(700, 700));
+		bg = new BoardGraphics(AbstractBoard.height, AbstractBoard.width, this);
+		bg.setPreferredSize(new Dimension(700, 700));
 
 		menuBar = createJMenuBar();
 		mainFrame.setJMenuBar(menuBar);
 		buttonPanel.add(btnStart);
 		buttonPanel.add(btnGiveUp);
-		mainPanel.add(boardPanel, BorderLayout.LINE_START);
+		mainPanel.add(bg, BorderLayout.LINE_START);
 		mainPanel.add(new JSeparator(SwingConstants.VERTICAL));
 		mainPanel.add(functionPanel, BorderLayout.LINE_END);
 
 		messageArea = new JTextArea(4, 40);
 		messageArea.setFont(smallGameFont);
 		chatPanel.add(messageArea, BorderLayout.CENTER);
+		
+		addStartButtonListener(btnStart);
+	}
+	
+	protected void addStartButtonListener(JButton btn) {
+		btn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				if (gameStarted.getText().equals("Game Started.")) {
+					JOptionPane.showMessageDialog(mainFrame, "The game already started.",
+							"Warning", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+				gameStart();
+			}
+		});
 	}
 	
 	private JMenuBar createJMenuBar() {
@@ -235,4 +251,8 @@ public abstract class AbstractGame {
 	}
 	
 	public abstract void updateTurnStatus();
+	
+	public boolean isBlackActive() {
+		return activePlayer;
+	}
 }
