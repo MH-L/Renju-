@@ -1,5 +1,10 @@
 package algorithm;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import model.UnrestrictedBoard;
@@ -25,11 +30,30 @@ public class BoardTree {
 			return -1;
 		}
 		
+		// Sort next moves based on increment of heuristic function in descending order
+		// (larger heuristic improvements will be checked earlier)
+		Set<Integer> nextMoves = bd.nextMoves();
+		List<Integer> nmsorted = new ArrayList<>(nextMoves);
+		Map<Integer, Integer> incMap = new HashMap<>();
+		for (int mv : nextMoves) {
+			incMap.put(mv, bd.getInc(mv, maximizing));
+		}
+		nmsorted.sort(new Comparator<Integer>() {
+			@Override
+			public int compare(Integer o1, Integer o2) {
+				// TODO Auto-generated method stub
+				int v1 = incMap.get(o1);
+				int v2 = incMap.get(o2);
+				if (v1 == v2)
+					return 0;
+				return v1 > v2 ? -1 : 1;
+			}
+		});
+		
 		int bestMove = -1;
 		if (maximizing) {
 			int maxVal = Integer.MIN_VALUE;
-			Set<Integer> nextMoves = bd.nextMoves();
-			for (int move : nextMoves) {
+			for (int move : nmsorted) {
 				bd.updateBoard(move, maximizing);
 				nodesNum++;
 				alphaBeta(bd, depth-1, alpha, beta, !maximizing, value);
@@ -47,8 +71,7 @@ public class BoardTree {
 			value[0] = maxVal;
 		} else {
 			int minVal = Integer.MAX_VALUE;
-			Set<Integer> nextMoves = bd.nextMoves();
-			for (int move : nextMoves) {
+			for (int move : nmsorted) {
 				bd.updateBoard(move, maximizing);
 				nodesNum++;
 				alphaBeta(bd, depth-1, alpha, beta, !maximizing, value);

@@ -45,8 +45,10 @@ public abstract class AbstractBoard {
 	protected int lastMove = invalid_location;
 	
 	protected Map<Integer, List<Integer>> adjacentMap;
+	protected Random rng;
 	
 	public AbstractBoard() {
+		rng = new Random();
 		rowBased = new int[height];
 		colBased = new int[width];
 		ltorDiag = new int[width + height - 1];
@@ -142,7 +144,8 @@ public abstract class AbstractBoard {
 	}
 	
 	public int evaluateBoard() {
-		return evaluateBoardPV(true) - evaluateBoardPV(false);
+		int randomPurt = rng.nextInt(7) - 3;
+		return evaluateBoardPV(true) - evaluateBoardPV(false) + randomPurt;
 	}
 	
 	public int evaluateBoardPV(boolean first) {
@@ -252,6 +255,32 @@ public abstract class AbstractBoard {
 		return curScore;
 	}
 	
+	public int getInc(int move, boolean first) {
+		int prevTotal = 0;
+		int postTotal = 0;
+		int rowIdx = move / width;
+		int colIdx = move % width;
+		int ltorIdx = getltorDiagIndex(move);
+		int rtolIdx = getrtolDiagIndex(move);
+		prevTotal += evaluateLine(rowBased[rowIdx], width, first, new int[]{0});
+		prevTotal += evaluateLine(colBased[colIdx], height, first, new int[]{0});
+		prevTotal += evaluateLine(ltorDiag[ltorIdx], Math.min(ltorIdx + 1, width + 
+				height - 1 - ltorIdx), first, new int[]{0});
+		prevTotal += evaluateLine(rtolDiag[rtolIdx], Math.min(rtolIdx + 1, width + 
+				height - 1 - rtolIdx), first, new int[]{0});
+		
+		updateBoard(move, first);
+		postTotal += evaluateLine(rowBased[rowIdx], width, first, new int[]{0});
+		postTotal += evaluateLine(colBased[colIdx], height, first, new int[]{0});
+		postTotal += evaluateLine(ltorDiag[ltorIdx], Math.min(ltorIdx + 1, width + 
+				height - 1 - ltorIdx), first, new int[]{0});
+		postTotal += evaluateLine(rtolDiag[rtolIdx], Math.min(rtolIdx + 1, width + 
+				height - 1 - rtolIdx), first, new int[]{0});
+		withdrawMove(move);
+		
+		return first ? postTotal - prevTotal : prevTotal - postTotal;
+	}
+	
 	public static int evaluateLine(int line, int numPos, boolean first, int[] criticalKind) {
 		// TODO corner cases: pattern at the ends
 		// If less than 5 positions, no value
@@ -273,7 +302,8 @@ public abstract class AbstractBoard {
 		String patOJumpFour1 = first ? "303330" : "202220";
 		String patOJumpFour2 = first ? "033303" : "022202";
 		String patClosedFour1 = first ? "33033" : "22022";
-		String patClosedFour2 = first ? "33033" : "22022";
+		String patClosedFour2 = first ? "233330" : "322220";
+		String patClosedFour3 = first ? "033332" : "022223";
 		String patClosedFourEnd = first ? "03333" : "02222";
 		String patClosedFourStart = first ? "33330" : "22220";
 		String patOpenThree1 = first ? "003330" : "002220";
@@ -304,7 +334,7 @@ public abstract class AbstractBoard {
 				base4Str.contains(patJumpFour3))
 			curScore += jump_four;
 		else if (base4Str.contains(patClosedFour1) || base4Str.contains(patClosedFour2)
-				|| base4Str.startsWith(patClosedFourStart) ||
+				|| base4Str.contains(patClosedFour3) || base4Str.startsWith(patClosedFourStart) ||
 				base4Str.endsWith(patClosedFourEnd))
 			curScore += closed_four;
 		else if (base4Str.contains(patOpenThree1) || base4Str.contains(patOpenThree2))
@@ -482,84 +512,5 @@ public abstract class AbstractBoard {
 		colBased[colIndex] &= (-1 - (3 << (rowIndex * 2)));
 		rtolDiag[rtolIdx] &= (-1 - (3 << (indexOnRtoLDiag * 2)));
 		ltorDiag[ltorIdx] &= (-1 - (3 << (indexOnLtoRDiag * 2)));
-	}
-	
-	public void lrMajorRender() {
-		char firstPlayerChar = '\u25CF';
-		char secondPlayerChar = '\u25CB';
-		char emptyLocChar = '\u25A1';
-		System.out.println("   A B C D E F G H I J K L M N O");
-		for (int i = 0; i < height; i++) {
-			System.out.print(i + 1);
-			if (i < 9)
-				System.out.print("\u0020\u0020");
-			else
-				System.out.print("\u0020");
-			for (int j = 0; j < width; j++) {
-				int ltorIdx = getltorDiagIndex(i * width + j);
-				int onltorIdx = getIndexOnLtoR(i * width + j);
-				int andingResult = ltorDiag[ltorIdx] & (3 << (onltorIdx * 2));
-				if (andingResult == (3 << (onltorIdx * 2)))
-					System.out.print(firstPlayerChar + "\u0020");
-				else if (andingResult == (2 << (onltorIdx * 2)))
-					System.out.print(secondPlayerChar + "\u0020");
-				else
-					System.out.print(emptyLocChar + "\u0020");
-			}
-			
-			System.out.println();
-		}
-	}
-	
-	public void rlMajorRender() {
-		char firstPlayerChar = '\u25CF';
-		char secondPlayerChar = '\u25CB';
-		char emptyLocChar = '\u25A1';
-		System.out.println("   A B C D E F G H I J K L M N O");
-		for (int i = 0; i < height; i++) {
-			System.out.print(i + 1);
-			if (i < 9)
-				System.out.print("\u0020\u0020");
-			else
-				System.out.print("\u0020");
-			for (int j = 0; j < width; j++) {
-				int rtolIdx = getrtolDiagIndex(i * width + j);
-				int onrtolIdx = getIndexOnRtoL(i * width + j);
-				int andingResult = rtolDiag[rtolIdx] & (3 << (onrtolIdx * 2));
-				if (andingResult == (3 << (onrtolIdx * 2)))
-					System.out.print(firstPlayerChar + "\u0020");
-				else if (andingResult == (2 << (onrtolIdx * 2)))
-					System.out.print(secondPlayerChar + "\u0020");
-				else
-					System.out.print(emptyLocChar + "\u0020");
-			}
-			
-			System.out.println();
-		}
-	}
-	
-	public void colMajRender() {
-		char firstPlayerChar = '\u25CF';
-		char secondPlayerChar = '\u25CB';
-		char emptyLocChar = '\u25A1';
-		System.out.println("   A B C D E F G H I J K L M N O");
-		for (int i = 0; i < height; i++) {
-			System.out.print(i + 1);
-			if (i < 9)
-				System.out.print("\u0020\u0020");
-			else
-				System.out.print("\u0020");
-			for (int j = 0; j < width; j++) {
-				int andingResult = colBased[j] & (3 << (i * 2));
-				if (andingResult == (3 << (i * 2)))
-					System.out.print(firstPlayerChar + "\u0020");
-				else if (andingResult == (2 << (i * 2)))
-					System.out.print(secondPlayerChar + "\u0020");
-				else
-					System.out.print(emptyLocChar + "\u0020");
-			}
-			
-			System.out.println();
-		}
 	}
 }
