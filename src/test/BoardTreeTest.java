@@ -72,6 +72,17 @@ public class BoardTreeTest {
 		bd.render();
 		System.out.println(BoardTree.alphaBeta(bd, 5, Integer.MIN_VALUE, Integer.MAX_VALUE, 
 				false, new int[]{0}));
+		
+		bd.reset();
+		xcoord = Arrays.asList(6,5,6,4,6,7,8,9,6,9,8);
+		ycoord = Arrays.asList(3,4,4,5,5,5,5,5,6,6,7);
+		updateBoardInBatch(bd, ycoord, xcoord, true);
+		xcoord = Arrays.asList(6,7,8,5,10,11,3,5,7,6,7);
+		ycoord = Arrays.asList(2,4,4,5,5,5,6,6,6,7,8);
+		updateBoardInBatch(bd, ycoord, xcoord, false);
+		bd.render();
+		System.out.println(BoardTree.alphaBeta(bd, 5, Integer.MIN_VALUE, Integer.MAX_VALUE, 
+				true, new int[]{0}));
 	}
 	
 	private void updateBoardInBatch(AbstractBoard bd, List<Integer> ycoord, 

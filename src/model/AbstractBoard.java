@@ -304,6 +304,8 @@ public abstract class AbstractBoard {
 		String patClosedFour1 = first ? "33033" : "22022";
 		String patClosedFour2 = first ? "233330" : "322220";
 		String patClosedFour3 = first ? "033332" : "022223";
+		String patClosedFour4 = first ? "233303" : "322202";
+		String patClosedFour5 = first ? "303332" : "202223";
 		String patClosedFourEnd = first ? "03333" : "02222";
 		String patClosedFourStart = first ? "33330" : "22220";
 		String patOpenThree1 = first ? "003330" : "002220";
@@ -334,8 +336,9 @@ public abstract class AbstractBoard {
 				base4Str.contains(patJumpFour3))
 			curScore += jump_four;
 		else if (base4Str.contains(patClosedFour1) || base4Str.contains(patClosedFour2)
-				|| base4Str.contains(patClosedFour3) || base4Str.startsWith(patClosedFourStart) ||
-				base4Str.endsWith(patClosedFourEnd))
+				|| base4Str.contains(patClosedFour3) || base4Str.contains(patClosedFour4)
+				|| base4Str.contains(patClosedFour5) || base4Str.startsWith(patClosedFourStart)
+				|| base4Str.endsWith(patClosedFourEnd))
 			curScore += closed_four;
 		else if (base4Str.contains(patOpenThree1) || base4Str.contains(patOpenThree2))
 			curScore += open_three;
