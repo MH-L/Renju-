@@ -1,17 +1,26 @@
 package model;
 
-public class ComPlayer extends AbstractPlayer {
+import algorithm.BoardTree;
 
+public class ComPlayer extends AbstractPlayer {
+	private UnrestrictedBoard gameBoard;
+	private boolean isComFirst;
+	
+	ComPlayer(UnrestrictedBoard bd, boolean isComFirst) {
+		gameBoard = bd;
+		this.isComFirst = isComFirst;
+	}
+	
 	@Override
-	public void makeMove() {
-		// TODO Auto-generated method stub
-		
+	public int makeMove() {
+		return BoardTree.alphaBeta(gameBoard, 5, Integer.MIN_VALUE, 
+				Integer.MAX_VALUE, isComFirst, new int[]{0});
 	}
 
 	@Override
-	public void withdraw() {
+	public boolean withdraw() {
 		// TODO Auto-generated method stub
-		
+		return false;
 	}
 
 }

@@ -7,4 +7,10 @@ public class RestrictedCvCGame extends AbstractGame {
 		
 	}
 
+	@Override
+	public void comMove() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

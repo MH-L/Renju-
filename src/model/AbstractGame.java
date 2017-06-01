@@ -252,6 +252,8 @@ public abstract class AbstractGame {
 	
 	public abstract void updateTurnStatus();
 	
+	public abstract void comMove();
+	
 	public boolean isBlackActive() {
 		return activePlayer;
 	}

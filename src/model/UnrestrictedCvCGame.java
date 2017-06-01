@@ -6,5 +6,11 @@ public class UnrestrictedCvCGame extends AbstractGame {
 	public void updateTurnStatus() {
 		
 	}
+
+	@Override
+	public void comMove() {
+		// TODO Auto-generated method stub
+		
+	}
 	
 }

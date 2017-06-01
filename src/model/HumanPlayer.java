@@ -3,15 +3,15 @@ package model;
 public class HumanPlayer extends AbstractPlayer {
 
 	@Override
-	public void makeMove() {
+	public int makeMove() {
 		// TODO Auto-generated method stub
-		
+		return 0;
 	}
 
 	@Override
-	public void withdraw() {
+	public boolean withdraw() {
 		// TODO Auto-generated method stub
-		
+		return false;
 	}
 
 }

@@ -9,4 +9,10 @@ public class RestrictedGame extends AbstractGame {
 	public void updateTurnStatus() {
 		isPlayerTurn = !isPlayerTurn;
 	}
+
+	@Override
+	public void comMove() {
+		// TODO Auto-generated method stub
+		
+	}
 }

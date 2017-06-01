@@ -30,6 +30,10 @@ public class BoardGraphics extends JPanel {
 	private boolean activated = false;
 	private Coordinate[][] grid;
 	
+	public enum Stone {
+		UNOCCUPIED, FIRST, SECOND
+	}
+	
 	public BoardGraphics(int height, int width, AbstractGame game) {
 		super(new GridLayout(height, width));
 		this.height = height;
@@ -53,26 +57,20 @@ public class BoardGraphics extends JPanel {
 							game.warnGameFrozen();
 							return;
 						}
+						
+						if (!game.playerCanMove()) {
+							// TODO maybe display warnings??
+							return;
+						}
 						if (square.isUnoccupied()) {
 							if (game.isBlackActive()) {
-								try {
-									Image img = ImageIO.read(getClass().getResource("/images/occupied.png"));
-									square.setIcon(new ImageIcon(img));
-								} catch (IOException e1) {
-									game.errorRendering();
-								}
 								square.setStone(true);
-								game.updateTurnStatus();
+								bd.updateBoard(square.y * width + square.x, true);
 							} else {
-								try {
-									Image img = ImageIO.read(getClass().getResource("/images/occ.png"));
-									square.setIcon(new ImageIcon(img));
-								} catch (IOException e1) {
-									game.errorRendering();
-								}
 								square.setStone(false);
-								game.updateTurnStatus();
+								bd.updateBoard(square.y * width + square.x, false);
 							}
+							game.comMove();
 						} else {
 							game.displayOccupiedWarning();
 						}
@@ -82,6 +80,13 @@ public class BoardGraphics extends JPanel {
 				grid[i][j] = square;
 			}
 		}
+	}
+	
+	public void updateComMove(int move, boolean first) {
+		bd.updateBoard(move, first);
+		int rowIdx = move / width;
+		int colIdx = move % width;
+		grid[rowIdx][colIdx].setStone(first);
 	}
 	
 	public void reset() {
@@ -96,15 +101,11 @@ public class BoardGraphics extends JPanel {
 		activated = false;
 	}
 	
-	public static class Coordinate extends JButton {
+	public class Coordinate extends JButton {
 		private static final long serialVersionUID = -581532617710492838L;
 		public int x;
 		public int y;
 		public Stone stone;
-
-		public enum Stone {
-			UNOCCUPIED, FIRST, SECOND
-		}
 
 		public Coordinate(int y, int x) {
 			this.y = y;
@@ -117,6 +118,17 @@ public class BoardGraphics extends JPanel {
 		}
 
 		public void setStone(boolean isFirst) {
+			String resourcesStr = "";
+			if (isFirst)
+				resourcesStr = "/images/occupied.png";
+			else
+				resourcesStr = "/images/occ.png";	
+			try {
+				Image img = ImageIO.read(getClass().getResource(resourcesStr));
+				setIcon(new ImageIcon(img));
+			} catch (IOException e1) {
+				game.errorRendering();
+			}
 			stone = isFirst ? Stone.FIRST : Stone.SECOND;
 		}
 
@@ -164,5 +176,9 @@ public class BoardGraphics extends JPanel {
 
 	public void setupBoard(AbstractBoard bd) {
 		this.bd = bd;
+	}
+	
+	public AbstractBoard getBoard() {
+		return bd;
 	}
 }
