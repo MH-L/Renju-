@@ -258,9 +258,6 @@ public abstract class AbstractBoard {
 		if (numPos < 5)
 			return 0;
 		
-		if (true)
-			return new Random().nextInt(21) - 10;
-		
 		String base4Str = Integer.toString(line, 4);
 		while (base4Str.length() < numPos) {
 			base4Str = '0' + base4Str;
@@ -283,15 +280,15 @@ public abstract class AbstractBoard {
 		String patOpenThree2 = first ? "033300" : "022200";
 		String patJumpThree1 = first ? "033030" : "022020";
 		String patJumpThree2 = first ? "030330" : "020220";
-//		
+		
 //		// TODO consider closed jump 3
-//		String patClosedThree1 = first ? "003332" : "002223";
-//		String patClosedThree2 = first ? "233300" : "322200";
-//		String patClosedThreeEnd = first ? "00333" : "00222";
-//		String patClosedThreeStart = first ? "33300" : "22200";
-//		String patOpenTwo = first ? "003300" : "002200";
-//		String patSJTwo = first ? "0030300" : "0020200";
-//		String patBJTwo = first ? "030030" : "020020";
+		String patClosedThree1 = first ? "003332" : "002223";
+		String patClosedThree2 = first ? "233300" : "322200";
+		String patClosedThreeEnd = first ? "00333" : "00222";
+		String patClosedThreeStart = first ? "33300" : "22200";
+		String patOpenTwo = first ? "003300" : "002200";
+		String patSJTwo = first ? "0030300" : "0020200";
+		String patBJTwo = first ? "030030" : "020020";
 		
 		// If already won or will be winning, return corresponding scores
 		// "X0XXX0X" is a special kind, which counts as an open four
@@ -323,45 +320,45 @@ public abstract class AbstractBoard {
 		else
 			criticalKind[0] = has_none;
 		
-//		int closedThreeCount = 0, startPos = 0;
-//		if (base4Str.startsWith(patClosedThreeStart) || base4Str.endsWith(patClosedThreeEnd))
-//			closedThreeCount ++;
-//		while ((startPos = base4Str.indexOf(patClosedThree1, startPos)) != -1) {
-//			startPos ++;
-//			closedThreeCount ++;
-//		}
-//		
-//		startPos = 0;
-//		while ((startPos = base4Str.indexOf(patClosedThree2, startPos)) != -1) {
-//			startPos ++;
-//			closedThreeCount ++;
-//		}
-//		curScore += closedThreeCount * closed_three;
-//		
-//		startPos = 0;
-//		int openTwoCount = 0;
-//		// TODO revise the definition of "open two"
-//		while ((startPos = base4Str.indexOf(patOpenTwo, startPos)) != -1) {
-//			startPos ++;
-//			openTwoCount ++;
-//		}
-//		
-//		startPos = 0;
-//		int smallJumpTwoCount = 0;
-//		while ((startPos = base4Str.indexOf(patSJTwo, startPos)) != -1) {
-//			startPos ++;
-//			smallJumpTwoCount ++;
-//		}
-//		
-//		startPos = 0;
-//		int bigJumpTwoCount = 0;
-//		while ((startPos = base4Str.indexOf(patBJTwo, startPos)) != -1) {
-//			startPos ++;
-//			bigJumpTwoCount ++;
-//		}
-//		
-//		curScore += openTwoCount * open_two + smallJumpTwoCount * small_jump_two
-//				+ bigJumpTwoCount * big_jump_two;
+		int closedThreeCount = 0, startPos = 0;
+		if (base4Str.startsWith(patClosedThreeStart) || base4Str.endsWith(patClosedThreeEnd))
+			closedThreeCount ++;
+		while ((startPos = base4Str.indexOf(patClosedThree1, startPos)) != -1) {
+			startPos ++;
+			closedThreeCount ++;
+		}
+		
+		startPos = 0;
+		while ((startPos = base4Str.indexOf(patClosedThree2, startPos)) != -1) {
+			startPos ++;
+			closedThreeCount ++;
+		}
+		curScore += closedThreeCount * closed_three;
+		
+		startPos = 0;
+		int openTwoCount = 0;
+		// TODO revise the definition of "open two"
+		while ((startPos = base4Str.indexOf(patOpenTwo, startPos)) != -1) {
+			startPos ++;
+			openTwoCount ++;
+		}
+		
+		startPos = 0;
+		int smallJumpTwoCount = 0;
+		while ((startPos = base4Str.indexOf(patSJTwo, startPos)) != -1) {
+			startPos ++;
+			smallJumpTwoCount ++;
+		}
+		
+		startPos = 0;
+		int bigJumpTwoCount = 0;
+		while ((startPos = base4Str.indexOf(patBJTwo, startPos)) != -1) {
+			startPos ++;
+			bigJumpTwoCount ++;
+		}
+		
+		curScore += openTwoCount * open_two + smallJumpTwoCount * small_jump_two
+				+ bigJumpTwoCount * big_jump_two;
 			
 		return curScore;
 	}
@@ -485,5 +482,84 @@ public abstract class AbstractBoard {
 		colBased[colIndex] &= (-1 - (3 << (rowIndex * 2)));
 		rtolDiag[rtolIdx] &= (-1 - (3 << (indexOnRtoLDiag * 2)));
 		ltorDiag[ltorIdx] &= (-1 - (3 << (indexOnLtoRDiag * 2)));
+	}
+	
+	public void lrMajorRender() {
+		char firstPlayerChar = '\u25CF';
+		char secondPlayerChar = '\u25CB';
+		char emptyLocChar = '\u25A1';
+		System.out.println("   A B C D E F G H I J K L M N O");
+		for (int i = 0; i < height; i++) {
+			System.out.print(i + 1);
+			if (i < 9)
+				System.out.print("\u0020\u0020");
+			else
+				System.out.print("\u0020");
+			for (int j = 0; j < width; j++) {
+				int ltorIdx = getltorDiagIndex(i * width + j);
+				int onltorIdx = getIndexOnLtoR(i * width + j);
+				int andingResult = ltorDiag[ltorIdx] & (3 << (onltorIdx * 2));
+				if (andingResult == (3 << (onltorIdx * 2)))
+					System.out.print(firstPlayerChar + "\u0020");
+				else if (andingResult == (2 << (onltorIdx * 2)))
+					System.out.print(secondPlayerChar + "\u0020");
+				else
+					System.out.print(emptyLocChar + "\u0020");
+			}
+			
+			System.out.println();
+		}
+	}
+	
+	public void rlMajorRender() {
+		char firstPlayerChar = '\u25CF';
+		char secondPlayerChar = '\u25CB';
+		char emptyLocChar = '\u25A1';
+		System.out.println("   A B C D E F G H I J K L M N O");
+		for (int i = 0; i < height; i++) {
+			System.out.print(i + 1);
+			if (i < 9)
+				System.out.print("\u0020\u0020");
+			else
+				System.out.print("\u0020");
+			for (int j = 0; j < width; j++) {
+				int rtolIdx = getrtolDiagIndex(i * width + j);
+				int onrtolIdx = getIndexOnRtoL(i * width + j);
+				int andingResult = rtolDiag[rtolIdx] & (3 << (onrtolIdx * 2));
+				if (andingResult == (3 << (onrtolIdx * 2)))
+					System.out.print(firstPlayerChar + "\u0020");
+				else if (andingResult == (2 << (onrtolIdx * 2)))
+					System.out.print(secondPlayerChar + "\u0020");
+				else
+					System.out.print(emptyLocChar + "\u0020");
+			}
+			
+			System.out.println();
+		}
+	}
+	
+	public void colMajRender() {
+		char firstPlayerChar = '\u25CF';
+		char secondPlayerChar = '\u25CB';
+		char emptyLocChar = '\u25A1';
+		System.out.println("   A B C D E F G H I J K L M N O");
+		for (int i = 0; i < height; i++) {
+			System.out.print(i + 1);
+			if (i < 9)
+				System.out.print("\u0020\u0020");
+			else
+				System.out.print("\u0020");
+			for (int j = 0; j < width; j++) {
+				int andingResult = colBased[j] & (3 << (i * 2));
+				if (andingResult == (3 << (i * 2)))
+					System.out.print(firstPlayerChar + "\u0020");
+				else if (andingResult == (2 << (i * 2)))
+					System.out.print(secondPlayerChar + "\u0020");
+				else
+					System.out.print(emptyLocChar + "\u0020");
+			}
+			
+			System.out.println();
+		}
 	}
 }

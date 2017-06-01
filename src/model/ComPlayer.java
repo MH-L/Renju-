@@ -13,7 +13,7 @@ public class ComPlayer extends AbstractPlayer {
 	
 	@Override
 	public int makeMove() {
-		return BoardTree.alphaBeta(gameBoard, 5, Integer.MIN_VALUE, 
+		return BoardTree.alphaBeta(gameBoard, 4, Integer.MIN_VALUE, 
 				Integer.MAX_VALUE, isComFirst, new int[]{0});
 	}
 

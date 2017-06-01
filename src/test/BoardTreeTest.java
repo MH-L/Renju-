@@ -54,8 +54,8 @@ public class BoardTreeTest {
 		List<Integer> ycoord = Arrays.asList(6,6,6,7,8,9);
 		List<Integer> xcoord = Arrays.asList(5,6,7,6,5,4);
 		updateBoardInBatch(bd, ycoord, xcoord, true);
-		xcoord = Arrays.asList(4,8,4,5,3);
-		ycoord = Arrays.asList(5,5,7,7,10);
+		xcoord = Arrays.asList(8,4,5,3,4);
+		ycoord = Arrays.asList(5,7,7,10,5);
 		updateBoardInBatch(bd, ycoord, xcoord, false);
 		bd.render();
 		System.out.println(BoardTree.alphaBeta(bd, 5, Integer.MIN_VALUE, Integer.MAX_VALUE, 
