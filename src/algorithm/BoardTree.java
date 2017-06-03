@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import model.UnrestrictedBoard;
@@ -111,5 +112,37 @@ public class BoardTree {
 		}
 		
 		return bestMove;
+	}
+	
+	/**
+	 * Threat-space search version 1; initial version only considers direct threats (4 stones).
+	 * @param bd
+	 * @param depth
+	 * @param first
+	 * @return
+	 */
+	public static int threatSpaceSearch(UnrestrictedBoard bd, int depth, boolean first) {
+		if (depth <= 0)
+			return -100;
+		if (bd.canWinNextMove(!first) >= 0)
+			return -100;
+		
+		int selfWinningLoc = bd.canWinNextMove(first);
+		if (selfWinningLoc >= 0)
+			return selfWinningLoc;
+		
+		Map<Integer, Integer> threatAndCounter = bd.findThreatLocation(first);
+		
+		for (Entry<Integer, Integer> pair : threatAndCounter.entrySet()) {
+			bd.updateBoard(pair.getKey(), first);
+			bd.updateBoard(pair.getValue(), !first);
+			int childResult = threatSpaceSearch(bd, depth - 1, first);
+			bd.withdrawMove(pair.getKey());
+			bd.withdrawMove(pair.getValue());
+			if (childResult >= 0)
+				return childResult;
+		}
+		
+		return -100;
 	}
 }

@@ -534,6 +534,30 @@ public abstract class AbstractBoard {
 		return rtolIdx < width ? rowIndex : width - 1 - colIndex;
 	}
 	
+	public int lrDiagToBoardPosition(int lrIndex, int indexOnLR) {
+		if (lrIndex <= width) {
+			int rowIndex = indexOnLR;
+			int colIndex = (width - 1 - lrIndex) + indexOnLR;
+			return rowIndex * width + colIndex;
+		} else {
+			int rowIndex = (lrIndex - width + 1) + indexOnLR;
+			int colIndex = indexOnLR;
+			return rowIndex * width + colIndex;
+		}
+	}
+	
+	public int rlDiagToBoardPosition(int rlIndex, int indexOnRL) {
+		if (rlIndex <= width) {
+			int rowIndex = indexOnRL;
+			int colIndex = rlIndex - indexOnRL;
+			return rowIndex * width + colIndex;
+		} else {
+			int rowIndex = (rlIndex - width + 1) + indexOnRL;
+			int colIndex = width - 1 - indexOnRL;
+			return rowIndex * width + colIndex;
+		}
+	}
+	
 	public void withdrawMove(int move) {
 		if (move < 0 || move >= width * height)
 			return;
@@ -623,58 +647,78 @@ public abstract class AbstractBoard {
 	}
 	
 	/**
-	 * Return true if first can win in one move if he plays next.
+	 * Return the square to win if first can win in one move if he plays next;
+	 * if the first doesn't have a direct threat, return a negative number.
 	 * @param first - black to move or white
 	 * @return
 	 */
-	public boolean canWinNextMove(boolean first) {
-		for (int row : rowBased) {
-			if (lineHasFour(row, width, first))
-				return true;
+	public int canWinNextMove(boolean first) {
+		// TODO return the exact location
+		for (int i = 0; i < height; i++) {
+			int row = rowBased[i];
+			int fourResult = lineHasFour(row, width, first);
+			if (fourResult >= 0)
+				return i * width + fourResult;
 		}
 		
-		for (int col : colBased) {
-			if (lineHasFour(col, height, first))
-				return true;
+		for (int i = 0; i < width; i++) {
+			int col = colBased[i];
+			int fourResult = lineHasFour(col, height, first);
+			if (fourResult >= 0)
+				return fourResult * width + i;
 		}
 		
 		for (int i = 0; i < ltorDiag.length; i++) {
-			if (lineHasFour(ltorDiag[i], Math.min(i + 1, width + height - 1 - i), first))
-				return true;
+			int fourResult = lineHasFour(ltorDiag[i], Math.min(i + 1, width + height - 1 - i), first);
+			if (fourResult >= 0)
+				return fourResult;
 		}
 		
 		for (int i = 0; i < rtolDiag.length; i++) {
-			if (lineHasFour(rtolDiag[i], Math.min(i + 1, width + height - 1 - i), first))
-				return true;
+			int fourResult = lineHasFour(rtolDiag[i], Math.min(i + 1, width + height - 1 - i), first);
+			if (fourResult >= 0)
+				return fourResult;
 		}
 		
-		return false;
+		return -3;
 	}
 	
-	private boolean lineHasFour(int line, int numPos, boolean first) {
+	/**
+	 * Return index into the line of the empty location if four found; 
+	 * otherwise return a negative number indicating no four was found.
+	 * @param line
+	 * @param numPos
+	 * @param first
+	 * @return
+	 */
+	private int lineHasFour(int line, int numPos, boolean first) {
 		if (numPos < 5)
-			return false;
+			return -2;
 		
-		String base4Str = Integer.toString(line, 4);
-		while (base4Str.length() < numPos) {
-			base4Str = '0' + base4Str;
+		StringBuffer sb = new StringBuffer(Integer.toString(line, 4)).reverse();
+		while (sb.length() < numPos) {
+			sb.append('0');
 		}
-		
+
 		char selfChar = first ? '3' : '2';
 		int selfCount = 0, emptyCount = 0;
 		for (int i = 0; i < 5; i++) {
-			if (base4Str.charAt(i) == selfChar)
+			if (sb.charAt(i) == selfChar)
 				selfCount++;
-			else if (base4Str.charAt(i) == '0')
+			else if (sb.charAt(i) == '0')
 				emptyCount++;
 		}
 		
-		if (selfCount >= 4 && emptyCount >= 1)
-			return true;
+		if (selfCount >= 4 && emptyCount >= 1) {
+			for (int i = 0; i < 5; i++) {
+				if (sb.charAt(i) == '0')
+					return i;
+			}
+		}
 		
-		for (int i = 0; i + 5 < base4Str.length(); i++) {
-			char backChar = base4Str.charAt(i);
-			char frontChar = base4Str.charAt(i + 5);
+		for (int i = 0; i + 5 < sb.length(); i++) {
+			char backChar = sb.charAt(i);
+			char frontChar = sb.charAt(i + 5);
 			if (backChar == selfChar)
 				selfCount--;
 			else if (backChar == '0')
@@ -686,14 +730,18 @@ public abstract class AbstractBoard {
 				emptyCount++;
 			
 			if (selfCount >= 4 && emptyCount >= 1)
-				return true;
+				for (int j = i; j < i + 5; j++) {
+					if (sb.charAt(j) == '0')
+						return j;
+				}
 		}
-		return false;
+		
+		return -2;
 	}
 	
-	public List<Integer> findThreatLocation(boolean first) {
+	public Map<Integer, Integer> findThreatLocation(boolean first) {
 		List<Integer> selfStones = allSelfStones(first);
-		List<Integer> returnVal = new ArrayList<>();
+		Map<Integer, Integer> returnVal = new HashMap<>();
 		Set<Integer> possibleLocs = new HashSet<>();
 		for (int stone : selfStones) {
 			for (int adj : adjacentMap.get(stone)) {
@@ -708,16 +756,29 @@ public abstract class AbstractBoard {
 			int ci = loc % width;
 			int lri = getltorDiagIndex(loc);
 			int rli = getrtolDiagIndex(loc);
-			if (lineHasFour(rowBased[ri], width, first))
-				returnVal.add(loc);
-			if (lineHasFour(colBased[ci], height, first))
-				returnVal.add(loc);
-			if (lineHasFour(ltorDiag[lri], Math.min(lri + 1, 
-					width + height - lri - 1), first))
-				returnVal.add(loc);
-			if (lineHasFour(ltorDiag[rli], Math.min(rli + 1, 
-					width + height - rli - 1), first))
-				returnVal.add(loc);
+			int rowRes = lineHasFour(rowBased[ri], width, first);
+			if (rowRes >= 0) {
+				returnVal.put(loc, ri * width + rowRes);
+				continue;
+			}
+			
+			int colRes = lineHasFour(colBased[ci], height, first);
+			if (colRes >= 0) {
+				returnVal.put(loc, colRes * width + ci);
+				continue;
+			}
+			
+			int lrDiagRes = lineHasFour(ltorDiag[lri], Math.min(lri + 1, 
+					width + height - lri - 1), first);
+			if (lrDiagRes >= 0) {
+				returnVal.put(loc, lrDiagToBoardPosition(lri, lrDiagRes));
+				continue;
+			}
+			
+			int rlDiagRes = lineHasFour(ltorDiag[rli], Math.min(rli + 1, 
+					width + height - rli - 1), first);
+			if (rlDiagRes >= 0)
+				returnVal.put(loc, rlDiagToBoardPosition(rli, rlDiagRes));
 		}
 		
 		return returnVal;
