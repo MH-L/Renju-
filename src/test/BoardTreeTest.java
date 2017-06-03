@@ -83,6 +83,21 @@ public class BoardTreeTest {
 		bd.render();
 		System.out.println(BoardTree.alphaBeta(bd, 5, Integer.MIN_VALUE, Integer.MAX_VALUE, 
 				true, new int[]{0}));
+		
+		System.out.println(BoardTree.nodesNum);
+	}
+	
+	@Test
+	public void testConfused() {
+		List<Integer> xcoord = Arrays.asList(5,7,8,5,6,5,7,6,8,10);
+		List<Integer> ycoord = Arrays.asList(7,7,7,8,8,9,9,10,12,13);
+		updateBoardInBatch(bd, ycoord, xcoord, true);
+		xcoord = Arrays.asList(8,8,6,8,7,8,7,8,9);
+		ycoord = Arrays.asList(6,8,9,9,10,10,11,11,12);
+		updateBoardInBatch(bd, ycoord, xcoord, false);
+		bd.render();
+		System.out.println(BoardTree.alphaBeta(bd, 6, Integer.MIN_VALUE, Integer.MAX_VALUE, 
+				false, new int[]{0}));
 	}
 	
 	private void updateBoardInBatch(AbstractBoard bd, List<Integer> ycoord, 

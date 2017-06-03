@@ -1,5 +1,7 @@
 package model;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -8,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-
-import graphics.BoardGraphics;
 
 public abstract class AbstractBoard {
 	public static final int width = 15;
@@ -46,6 +46,8 @@ public abstract class AbstractBoard {
 	
 	protected Map<Integer, List<Integer>> adjacentMap;
 	protected Random rng;
+	public static List<Map<Integer, Integer>> evalMapsBlack;
+	public static List<Map<Integer, Integer>> evalMapsWhite;
 	
 	public AbstractBoard() {
 		rng = new Random();
@@ -54,7 +56,13 @@ public abstract class AbstractBoard {
 		ltorDiag = new int[width + height - 1];
 		rtolDiag = new int[width + height - 1];
 		adjacentMap = new HashMap<>();
-		genAdjMovesReduced();
+		evalMapsBlack = new ArrayList<>(width + 1);
+		evalMapsWhite = new ArrayList<>(width + 1);
+		for (int i = 0; i <= width; i++) {
+			evalMapsBlack.add(new HashMap<>());
+			evalMapsWhite.add(new HashMap<>());
+		}
+		generateAdjacentMoves();
 	}
 	
 	/**
@@ -144,8 +152,8 @@ public abstract class AbstractBoard {
 	}
 	
 	public int evaluateBoard() {
-		int randomPurt = rng.nextInt(7) - 3;
-		return evaluateBoardPV(true) - evaluateBoardPV(false) + randomPurt;
+//		int randomPurt = rng.nextInt(7) - 3;
+		return evaluateBoardPV(true) - evaluateBoardPV(false);
 	}
 	
 	public int evaluateBoardPV(boolean first) {
@@ -256,6 +264,7 @@ public abstract class AbstractBoard {
 	}
 	
 	public int getInc(int move, boolean first) {
+		// TODO Pay attention to composite patterns
 		int prevTotal = 0;
 		int postTotal = 0;
 		int rowIdx = move / width;
@@ -269,6 +278,13 @@ public abstract class AbstractBoard {
 		prevTotal += evaluateLine(rtolDiag[rtolIdx], Math.min(rtolIdx + 1, width + 
 				height - 1 - rtolIdx), first, new int[]{0});
 		
+		prevTotal -= evaluateLine(rowBased[rowIdx], width, !first, new int[]{0});
+		prevTotal -= evaluateLine(colBased[colIdx], height, !first, new int[]{0});
+		prevTotal -= evaluateLine(ltorDiag[ltorIdx], Math.min(ltorIdx + 1, width + 
+				height - 1 - ltorIdx), !first, new int[]{0});
+		prevTotal -= evaluateLine(rtolDiag[rtolIdx], Math.min(rtolIdx + 1, width + 
+				height - 1 - rtolIdx), !first, new int[]{0});
+		
 		updateBoard(move, first);
 		postTotal += evaluateLine(rowBased[rowIdx], width, first, new int[]{0});
 		postTotal += evaluateLine(colBased[colIdx], height, first, new int[]{0});
@@ -276,6 +292,13 @@ public abstract class AbstractBoard {
 				height - 1 - ltorIdx), first, new int[]{0});
 		postTotal += evaluateLine(rtolDiag[rtolIdx], Math.min(rtolIdx + 1, width + 
 				height - 1 - rtolIdx), first, new int[]{0});
+		
+		postTotal -= evaluateLine(rowBased[rowIdx], width, !first, new int[]{0});
+		postTotal -= evaluateLine(colBased[colIdx], height, !first, new int[]{0});
+		postTotal -= evaluateLine(ltorDiag[ltorIdx], Math.min(ltorIdx + 1, width + 
+				height - 1 - ltorIdx), !first, new int[]{0});
+		postTotal -= evaluateLine(rtolDiag[rtolIdx], Math.min(rtolIdx + 1, width + 
+				height - 1 - rtolIdx), !first, new int[]{0});
 		withdrawMove(move);
 		
 		return first ? postTotal - prevTotal : prevTotal - postTotal;
@@ -286,6 +309,11 @@ public abstract class AbstractBoard {
 		// If less than 5 positions, no value
 		if (numPos < 5)
 			return 0;
+		
+		Integer cached = first ? evalMapsBlack.get(numPos).get(line) :
+			evalMapsWhite.get(numPos).get(line);
+		if (cached != null)
+			return cached;
 		
 		String base4Str = Integer.toString(line, 4);
 		while (base4Str.length() < numPos) {
@@ -392,7 +420,11 @@ public abstract class AbstractBoard {
 		
 		curScore += openTwoCount * open_two + smallJumpTwoCount * small_jump_two
 				+ bigJumpTwoCount * big_jump_two;
-			
+		
+		if (first)
+			evalMapsBlack.get(numPos).put(line, curScore);
+		else
+			evalMapsWhite.get(numPos).put(line, curScore);
 		return curScore;
 	}
 	
@@ -502,7 +534,6 @@ public abstract class AbstractBoard {
 	}
 	
 	public void withdrawMove(int move) {
-		// TODO buggy
 		if (move < 0 || move >= width * height)
 			return;
 		int rowIndex = move / width;
@@ -515,5 +546,98 @@ public abstract class AbstractBoard {
 		colBased[colIndex] &= (-1 - (3 << (rowIndex * 2)));
 		rtolDiag[rtolIdx] &= (-1 - (3 << (indexOnRtoLDiag * 2)));
 		ltorDiag[ltorIdx] &= (-1 - (3 << (indexOnLtoRDiag * 2)));
+	}
+	
+	public boolean checkWinningLite(int move) {
+		int rowIdx = move / width;
+		int colIdx = move % width;
+		int ltorIdx = getltorDiagIndex(move);
+		int rtolIdx = getrtolDiagIndex(move);
+		String row = Integer.toString(rowBased[rowIdx], 4);
+		String col = Integer.toString(colBased[colIdx], 4);
+		String lrDiag = Integer.toString(ltorDiag[ltorIdx], 4);
+		String rlDiag = Integer.toString(rtolDiag[rtolIdx], 4);
+		
+		if (row.contains("22222") || row.contains("33333"))
+			return true;
+		if (col.contains("22222") || col.contains("33333"))
+			return true;
+		if (lrDiag.contains("22222") || lrDiag.contains("33333"))
+			return true;
+		if (rlDiag.contains("22222") || rlDiag.contains("33333"))
+			return true;
+		
+		return false;
+	}
+	
+	public void writeRecordToFile() {
+		long curTime = System.currentTimeMillis();
+		String fileName = "C:\\Users\\wuxiujuan\\Documents\\Gomoku\\" + curTime + ".txt";
+		List<Integer> blackStones = new ArrayList<>();
+		List<Integer> whiteStones = new ArrayList<>();
+		for (int i = 0; i < rowBased.length; i++) {
+			int curRow = rowBased[i];
+			for (int j = 0; j < width; j++) {
+				int target = (curRow >> (2*j)) & 3;
+				if (target == 3)
+					blackStones.add(i * width + j);
+				else if (target == 2)
+					whiteStones.add(i * width + j);
+			}
+		}
+		
+		try {
+			PrintWriter pr = new PrintWriter(fileName);
+			String xString = "xcoord = Arrays.asList(";
+			String yString = "ycoord = Arrays.asList(";
+			for (int blackStone : blackStones) {
+				xString += (blackStone % width) + ",";
+				yString += (blackStone / width) + ",";
+			}
+			xString = xString.substring(0, xString.length() - 1) + ");";
+			yString = yString.substring(0, yString.length() - 1) + ");";
+			
+			pr.println(xString);
+			pr.println(yString);
+			pr.println("updateBoardInBatch(bd, ycoord, xcoord, true);");
+			
+			xString = "xcoord = Arrays.asList(";
+			yString = "ycoord = Arrays.asList(";
+			for (int whiteStone : whiteStones) {
+				xString += (whiteStone % width) + ",";
+				yString += (whiteStone / width) + ",";
+			}
+			
+			xString = xString.substring(0, xString.length() - 1) + ");";
+			yString = yString.substring(0, yString.length() - 1) + ");";
+			
+			pr.println(xString);
+			pr.println(yString);
+			pr.println("updateBoardInBatch(bd, ycoord, xcoord, false);");
+			
+			pr.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public List<Integer> findThreatLocation(boolean first) {
+		List<Integer> selfStones = allSelfStones(first);
+		List<Integer> returnVal = new ArrayList<>();
+		return returnVal;
+	}
+	
+	public List<Integer> allSelfStones(boolean first) {
+		char stone = first ? '3' : '2';
+		List<Integer> returnVal = new ArrayList<>();
+		for (int i = 0; i < rowBased.length; i++) {
+			String b4s = Integer.toString(rowBased[i], 4);
+			for (int j = 0; j < b4s.length(); j++) {
+				if (b4s.charAt(j) == stone)
+					returnVal.add(i*width + b4s.length() - 1 - j);
+			}
+		}
+		
+		return returnVal;
 	}
 }

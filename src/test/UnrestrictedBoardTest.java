@@ -71,6 +71,15 @@ public class UnrestrictedBoardTest {
 		bd.updateBoard(33, true);
 		assertEquals(5, bd.evaluateBoard());
 		bd.render();
+		
+		bd.reset();
+		bd.updateBoard(2, true);
+		bd.updateBoard(18, true);
+		bd.updateBoard(34, true);
+		bd.updateBoard(50, true);
+		assertEquals(bd.evaluateBoard(), 15);
+		bd.updateBoard(66, true);
+		assertEquals(bd.evaluateBoard(), 1000000);
 	}
 	
 	@Test

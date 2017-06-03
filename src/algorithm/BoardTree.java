@@ -25,7 +25,19 @@ public class BoardTree {
 	 */
 	public static int alphaBeta(UnrestrictedBoard bd, int depth, int alpha, 
 			int beta, boolean maximizing, int[] value) {
-		if (depth == 0 || bd.someoneWins()) {
+		return alphaBetaHelper(bd, depth, alpha, beta, maximizing, value, -1);
+	}
+	
+	private static int alphaBetaHelper(UnrestrictedBoard bd, int depth, int alpha, 
+			int beta, boolean maximizing, int[] value, int lastMove) {
+		if (depth == 0) {
+			nodesNum++;
+			value[0] = bd.evaluateBoard();
+			return -1;
+		}
+		
+		if ((lastMove >= 0 && bd.checkWinningLite(lastMove)) || bd.someoneWins()) {
+			nodesNum++;
 			value[0] = bd.evaluateBoard();
 			return -1;
 		}
@@ -33,11 +45,18 @@ public class BoardTree {
 		// Sort next moves based on increment of heuristic function in descending order
 		// (larger heuristic improvements will be checked earlier)
 		Set<Integer> nextMoves = bd.nextMoves();
-		List<Integer> nmsorted = new ArrayList<>(nextMoves);
+		List<Integer> nmsorted = new ArrayList<>();
 		Map<Integer, Integer> incMap = new HashMap<>();
 		for (int mv : nextMoves) {
-			incMap.put(mv, bd.getInc(mv, maximizing));
+			int inc = bd.getInc(mv, maximizing);
+			// TODO best-looking moves are checked (Allis, 1994)
+			// TODO inc function might be buggy
+			if (Math.abs(inc) >= 4) {
+				nmsorted.add(mv);
+				incMap.put(mv, inc);
+			}
 		}
+		
 		nmsorted.sort(new Comparator<Integer>() {
 			@Override
 			public int compare(Integer o1, Integer o2) {
@@ -50,13 +69,16 @@ public class BoardTree {
 			}
 		});
 		
+		if (nmsorted.isEmpty())
+			nmsorted.addAll(nextMoves);
+		
 		int bestMove = -1;
 		if (maximizing) {
 			int maxVal = Integer.MIN_VALUE;
 			for (int move : nmsorted) {
 				bd.updateBoard(move, maximizing);
 				nodesNum++;
-				alphaBeta(bd, depth-1, alpha, beta, !maximizing, value);
+				alphaBetaHelper(bd, depth-1, alpha, beta, !maximizing, value, move);
 				if (value[0] > maxVal) {
 					maxVal = value[0];
 					bestMove = move;
@@ -74,7 +96,7 @@ public class BoardTree {
 			for (int move : nmsorted) {
 				bd.updateBoard(move, maximizing);
 				nodesNum++;
-				alphaBeta(bd, depth-1, alpha, beta, !maximizing, value);
+				alphaBetaHelper(bd, depth-1, alpha, beta, !maximizing, value, move);
 				if (value[0] < minVal) {
 					minVal = value[0];
 					bestMove = move;

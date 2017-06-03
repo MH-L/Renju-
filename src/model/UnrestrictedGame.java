@@ -16,8 +16,6 @@ public class UnrestrictedGame extends AbstractGame {
 		com = new ComPlayer((UnrestrictedBoard) bg.getBoard(), !playerFirst);
 		if (playerFirst)
 			isPlayerTurn = true;
-		else
-			makeFirstComMove();
 	}
 
 	@Override
@@ -40,5 +38,12 @@ public class UnrestrictedGame extends AbstractGame {
 		System.out.println(String.format("Com Move: %s, %s", comMove / 15, comMove % 15));
 		bg.updateComMove(comMove, !playerFirst);
 		updateTurnStatus();
+	}
+	
+	@Override
+	public void gameStart() {
+		super.gameStart();
+		if (!playerFirst)
+			makeFirstComMove();
 	}
 }

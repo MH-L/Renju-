@@ -44,6 +44,7 @@ public abstract class AbstractGame {
 	protected JFrame mainFrame;
 	protected JButton btnStart;
 	protected JButton btnGiveUp;
+	protected JButton btnToFile;
 	protected JPanel titlePanel;
 	protected JMenuBar menuBar;
 	protected JPanel historyPanel;
@@ -75,7 +76,9 @@ public abstract class AbstractGame {
 		mainFrame.setSize(defaultFrameDimension);
 		btnStart = Main.getPlainLookbtn("Start!", "Open Sans", 23, Font.PLAIN, Color.CYAN);
 		btnGiveUp = Main.getPlainLookbtn("Give UP!", "Open Sans", 23, Font.PLAIN, Color.RED);
+		btnToFile = Main.getPlainLookbtn("To File", "Open Sans", 23, Font.PLAIN, Color.PINK);
 		btnStart.setMargin(emptyMargin);
+		btnGiveUp.setMargin(emptyMargin);
 		btnGiveUp.setMargin(emptyMargin);
 		parentPanel.add(mainPanel, BorderLayout.WEST);
 		parentPanel.add(new JSeparator());
@@ -108,6 +111,7 @@ public abstract class AbstractGame {
 		mainFrame.setJMenuBar(menuBar);
 		buttonPanel.add(btnStart);
 		buttonPanel.add(btnGiveUp);
+		buttonPanel.add(btnToFile);
 		mainPanel.add(bg, BorderLayout.LINE_START);
 		mainPanel.add(new JSeparator(SwingConstants.VERTICAL));
 		mainPanel.add(functionPanel, BorderLayout.LINE_END);
@@ -117,6 +121,7 @@ public abstract class AbstractGame {
 		chatPanel.add(messageArea, BorderLayout.CENTER);
 		
 		addStartButtonListener(btnStart);
+		addToFileListener(btnToFile);
 	}
 	
 	protected void addStartButtonListener(JButton btn) {
@@ -129,6 +134,15 @@ public abstract class AbstractGame {
 					return;
 				}
 				gameStart();
+			}
+		});
+	}
+	
+	protected void addToFileListener(JButton btn) {
+		btn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				bg.getBoard().writeRecordToFile();
 			}
 		});
 	}
