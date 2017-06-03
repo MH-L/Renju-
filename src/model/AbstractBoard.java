@@ -152,6 +152,7 @@ public abstract class AbstractBoard {
 	}
 	
 	public int evaluateBoard() {
+		// TODO 1. random perturbation 2. return whether or not has 4
 //		int randomPurt = rng.nextInt(7) - 3;
 		return evaluateBoardPV(true) - evaluateBoardPV(false);
 	}
@@ -621,9 +622,104 @@ public abstract class AbstractBoard {
 		}
 	}
 	
+	/**
+	 * Return true if first can win in one move if he plays next.
+	 * @param first - black to move or white
+	 * @return
+	 */
+	public boolean canWinNextMove(boolean first) {
+		for (int row : rowBased) {
+			if (lineHasFour(row, width, first))
+				return true;
+		}
+		
+		for (int col : colBased) {
+			if (lineHasFour(col, height, first))
+				return true;
+		}
+		
+		for (int i = 0; i < ltorDiag.length; i++) {
+			if (lineHasFour(ltorDiag[i], Math.min(i + 1, width + height - 1 - i), first))
+				return true;
+		}
+		
+		for (int i = 0; i < rtolDiag.length; i++) {
+			if (lineHasFour(rtolDiag[i], Math.min(i + 1, width + height - 1 - i), first))
+				return true;
+		}
+		
+		return false;
+	}
+	
+	private boolean lineHasFour(int line, int numPos, boolean first) {
+		if (numPos < 5)
+			return false;
+		
+		String base4Str = Integer.toString(line, 4);
+		while (base4Str.length() < numPos) {
+			base4Str = '0' + base4Str;
+		}
+		
+		char selfChar = first ? '3' : '2';
+		int selfCount = 0, emptyCount = 0;
+		for (int i = 0; i < 5; i++) {
+			if (base4Str.charAt(i) == selfChar)
+				selfCount++;
+			else if (base4Str.charAt(i) == '0')
+				emptyCount++;
+		}
+		
+		if (selfCount >= 4 && emptyCount >= 1)
+			return true;
+		
+		for (int i = 0; i + 5 < base4Str.length(); i++) {
+			char backChar = base4Str.charAt(i);
+			char frontChar = base4Str.charAt(i + 5);
+			if (backChar == selfChar)
+				selfCount--;
+			else if (backChar == '0')
+				emptyCount--;
+			
+			if (frontChar == selfChar)
+				selfCount++;
+			else if (frontChar == '0')
+				emptyCount++;
+			
+			if (selfCount >= 4 && emptyCount >= 1)
+				return true;
+		}
+		return false;
+	}
+	
 	public List<Integer> findThreatLocation(boolean first) {
 		List<Integer> selfStones = allSelfStones(first);
 		List<Integer> returnVal = new ArrayList<>();
+		Set<Integer> possibleLocs = new HashSet<>();
+		for (int stone : selfStones) {
+			for (int adj : adjacentMap.get(stone)) {
+				if (isSquareEmpty(adj))
+					possibleLocs.add(adj);
+			}
+		}
+		
+		for (int loc : possibleLocs) {
+			updateBoard(loc, first);
+			int ri = loc / width;
+			int ci = loc % width;
+			int lri = getltorDiagIndex(loc);
+			int rli = getrtolDiagIndex(loc);
+			if (lineHasFour(rowBased[ri], width, first))
+				returnVal.add(loc);
+			if (lineHasFour(colBased[ci], height, first))
+				returnVal.add(loc);
+			if (lineHasFour(ltorDiag[lri], Math.min(lri + 1, 
+					width + height - lri - 1), first))
+				returnVal.add(loc);
+			if (lineHasFour(ltorDiag[rli], Math.min(rli + 1, 
+					width + height - rli - 1), first))
+				returnVal.add(loc);
+		}
+		
 		return returnVal;
 	}
 	
