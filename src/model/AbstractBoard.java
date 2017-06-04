@@ -18,7 +18,7 @@ public abstract class AbstractBoard {
 	protected static final int sente_stone = 3;
 	protected static final int gote_stone = 2;
 	
-	protected static final int winning_score = 1000000;
+	public static final int winning_score = 1000000;
 	protected static final int open_four = 8000;
 	protected static final int three_four = 2000;
 	protected static final int four_four = 2000;
@@ -305,7 +305,7 @@ public abstract class AbstractBoard {
 				height - 1 - rtolIdx), !first, new int[]{0});
 		withdrawMove(move);
 		
-		return first ? postTotal - prevTotal : prevTotal - postTotal;
+		return postTotal - prevTotal;
 	}
 	
 	public static int evaluateLine(int line, int numPos, boolean first, int[] criticalKind) {
@@ -576,7 +576,8 @@ public abstract class AbstractBoard {
 		ltorDiag[ltorIdx] &= (-1 - (3 << (indexOnLtoRDiag * 2)));
 	}
 	
-	public boolean checkWinningLite(int move) {
+	public boolean checkWinningLite(int move, boolean first) {
+		String pattern = first ? "33333" : "22222";
 		int rowIdx = move / width;
 		int colIdx = move % width;
 		int ltorIdx = getltorDiagIndex(move);
@@ -586,15 +587,15 @@ public abstract class AbstractBoard {
 		String lrDiag = Integer.toString(ltorDiag[ltorIdx], 4);
 		String rlDiag = Integer.toString(rtolDiag[rtolIdx], 4);
 		
-		if (row.contains("22222") || row.contains("33333"))
+		if (row.contains(pattern))
 			return true;
-		if (col.contains("22222") || col.contains("33333"))
+		if (col.contains(pattern))
 			return true;
-		if (lrDiag.contains("22222") || lrDiag.contains("33333"))
+		if (lrDiag.contains(pattern))
 			return true;
-		if (rlDiag.contains("22222") || rlDiag.contains("33333"))
+		if (rlDiag.contains(pattern))
 			return true;
-		
+
 		return false;
 	}
 	
@@ -806,4 +807,13 @@ public abstract class AbstractBoard {
 	}
 	
 	public abstract boolean someoneWins();
+	
+	public boolean boardFull() {
+		for (int row : rowBased) {
+			if ((row & 715827882) != 715827882)
+				return false;
+		}
+		
+		return true;
+	}
 }

@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import model.AbstractBoard;
 import model.UnrestrictedBoard;
 
 public class BoardTree {
@@ -37,7 +38,8 @@ public class BoardTree {
 			return -1;
 		}
 		
-		if ((lastMove >= 0 && bd.checkWinningLite(lastMove)) || bd.someoneWins()) {
+		if ((lastMove >= 0 && bd.checkWinningLite(lastMove, !maximizing)) || 
+				bd.someoneWins()) {
 			nodesNum++;
 			value[0] = bd.evaluateBoard();
 			return -1;
@@ -52,7 +54,7 @@ public class BoardTree {
 			int inc = bd.getInc(mv, maximizing);
 			// TODO best-looking moves are checked (Allis, 1994)
 			// TODO inc function might be buggy
-			if (Math.abs(inc) >= 4) {
+			if (inc > 0) {
 				nmsorted.add(mv);
 				incMap.put(mv, inc);
 			}
@@ -72,6 +74,12 @@ public class BoardTree {
 		
 		if (nmsorted.isEmpty())
 			nmsorted.addAll(nextMoves);
+		
+		Integer maxInc = incMap.get(nmsorted.get(0));
+		if (maxInc != null && maxInc >= AbstractBoard.winning_score) {
+			value[0] = AbstractBoard.winning_score;
+			return nmsorted.get(0);
+		}
 		
 		int bestMove = -1;
 		if (maximizing) {

@@ -8,6 +8,8 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Random;
+
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -24,6 +26,10 @@ import javax.swing.WindowConstants;
 import graphics.BoardGraphics;
 
 public abstract class AbstractGame {
+	public static final int player_always_black = 1;
+	public static final int player_always_white = 2;
+	public static final int random_turn = 3;
+	public static final int alternating_turn = 4;
 	protected static final Font smallGameFont = new Font("Open Sans",
 			Font.PLAIN, 28);
 	protected static final Font largeGameFont = new Font("Open Sans",
@@ -58,6 +64,7 @@ public abstract class AbstractGame {
 	protected AbstractPlayer player2;
 	protected boolean isPlayerTurn = false;
 	protected boolean activePlayer = true;
+	protected Random rng;
 	
 	public enum Difficulty {
 		novice, intermediate, advanced, ultimate;
@@ -68,6 +75,7 @@ public abstract class AbstractGame {
 	}
 	
 	public AbstractGame() {
+		rng = new Random();
 		parentPanel = new JPanel(new BorderLayout());
 		chatPanel = new JPanel(new BorderLayout());
 		chatPanel.setPreferredSize(new Dimension(395, 700));
@@ -219,8 +227,8 @@ public abstract class AbstractGame {
 				"Error", JOptionPane.ERROR_MESSAGE);
 	}
 
-	public void displayWinnerInfo(boolean isSente) {
-		String winnerInfo = isSente ? "Black" : "White";
+	public void displayWinnerInfo(boolean isPlayer) {
+		String winnerInfo = isPlayer ? "Player" : "Computer";
 		JOptionPane.showMessageDialog(null, winnerInfo + " wins!",
 				"Game Over", JOptionPane.INFORMATION_MESSAGE);
 	}
@@ -267,6 +275,8 @@ public abstract class AbstractGame {
 	public abstract void updateTurnStatus();
 	
 	public abstract void comMove();
+	
+	public abstract void afterGameCleanup();
 	
 	public boolean isBlackActive() {
 		return activePlayer;

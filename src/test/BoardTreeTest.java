@@ -98,6 +98,17 @@ public class BoardTreeTest {
 		bd.render();
 		System.out.println(BoardTree.alphaBeta(bd, 6, Integer.MIN_VALUE, Integer.MAX_VALUE, 
 				false, new int[]{0}));
+		
+		bd.reset();
+		xcoord = Arrays.asList(8,6,7,4,9,4,9,7,5,8,5,6,7,9);
+		ycoord = Arrays.asList(1,2,2,3,3,4,4,5,6,6,7,7,7,8);
+		updateBoardInBatch(bd, ycoord, xcoord, true);
+		xcoord = Arrays.asList(8,6,7,8,5,6,7,8,4,6,6,7,8);
+		ycoord = Arrays.asList(2,3,3,3,4,4,4,4,5,5,6,6,7);
+		updateBoardInBatch(bd, ycoord, xcoord, false);
+		bd.render();
+		System.out.println(BoardTree.alphaBeta(bd, 6, Integer.MIN_VALUE, Integer.MAX_VALUE, 
+				false, new int[]{0}));
 	}
 	
 	private void updateBoardInBatch(AbstractBoard bd, List<Integer> ycoord, 

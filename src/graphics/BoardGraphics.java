@@ -15,7 +15,6 @@ import javax.swing.JPanel;
 
 import model.AbstractBoard;
 import model.AbstractGame;
-import model.UnrestrictedBoard;
 
 public class BoardGraphics extends JPanel {
 
@@ -71,6 +70,15 @@ public class BoardGraphics extends JPanel {
 								square.setStone(false);
 								bd.updateBoard(square.y * width + square.x, false);
 							}
+							if (bd.someoneWins()) {
+								game.displayWinnerInfo(true);
+								reset();
+								return;
+							} else if (bd.boardFull()) {
+								game.displayTieMessageBoardFull();
+								reset();
+								return;
+							}
 							game.comMove();
 						} else {
 							game.displayOccupiedWarning();
@@ -89,11 +97,16 @@ public class BoardGraphics extends JPanel {
 		int colIdx = move % width;
 		grid[rowIdx][colIdx].setStone(first);
 		if (bd.someoneWins()) {
-			
+			game.displayWinnerInfo(false);
+			reset();
+		} else if (bd.boardFull()) {
+			game.displayTieMessageBoardFull();
+			reset();
 		}
 	}
 	
 	public void reset() {
+		activated = false;
 		for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
 				grid[i][j].reset();

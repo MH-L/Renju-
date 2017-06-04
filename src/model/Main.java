@@ -223,6 +223,7 @@ public class Main {
 		turnGroup.add(goteOption);
 		turnGroup.add(randomOption);
 		turnGroup.add(takeTurnOption);
+		randomOption.setSelected(true);
 
 		JButton playButton = Main.getPlainLookbtn("Play!", "Calibri", 33, Font.PLAIN, Color.CYAN);
 		singlePlayerOptionPanel.add(Box.createVerticalStrut(20));
@@ -232,30 +233,40 @@ public class Main {
 		playButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				int turnPolicy = 0;
+				if (senteOption.isSelected())
+					turnPolicy = AbstractGame.player_always_black;
+				else if (goteOption.isSelected())
+					turnPolicy = AbstractGame.player_always_white;
+				else if (randomOption.isSelected())
+					turnPolicy = AbstractGame.random_turn;
+				else
+					turnPolicy = AbstractGame.alternating_turn;
+				
 				// TODO get user's choices
 				singlePlayerOptionFrame.dispose();
 				boolean isSente = false;
 				if (senteOption.isSelected())
 					isSente = true;
 				if (noviceDiffOption.isSelected())
-					game = new UnrestrictedGame(isSente, Difficulty.novice);
+					game = new UnrestrictedGame(turnPolicy, Difficulty.novice);
 				else if (intermediateDiffOption.isSelected())
-					game = new UnrestrictedGame(isSente, Difficulty.intermediate);
+					game = new UnrestrictedGame(turnPolicy, Difficulty.intermediate);
 				else if (advancedDiffOption.isSelected())
-					game = new UnrestrictedGame(isSente, Difficulty.advanced);
+					game = new UnrestrictedGame(turnPolicy, Difficulty.advanced);
 				else if (ultimateDiffOption.isSelected())
-					game = new UnrestrictedGame(isSente, Difficulty.ultimate);
+					game = new UnrestrictedGame(turnPolicy, Difficulty.ultimate);
 				else {
 					// For "Even novice is too hard", we use random XDDDD
 					int randNum = new Random().nextInt(4);
 					if (randNum == 0)
-						game = new UnrestrictedGame(isSente, Difficulty.novice);
+						game = new UnrestrictedGame(turnPolicy, Difficulty.novice);
 					else if (randNum == 1)
-						game = new UnrestrictedGame(isSente, Difficulty.intermediate);
+						game = new UnrestrictedGame(turnPolicy, Difficulty.intermediate);
 					else if (randNum == 2)
-						game = new UnrestrictedGame(isSente, Difficulty.advanced);
+						game = new UnrestrictedGame(turnPolicy, Difficulty.advanced);
 					else
-						game = new UnrestrictedGame(isSente, Difficulty.ultimate);
+						game = new UnrestrictedGame(turnPolicy, Difficulty.ultimate);
 				}
 				welcomeFrame.dispose();
 			}

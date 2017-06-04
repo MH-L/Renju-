@@ -8,14 +8,30 @@ import java.util.Random;
 public class UnrestrictedGame extends AbstractGame {
 	private boolean playerFirst;
 	private ComPlayer com;
+	private int turnPolicy;
 	
-	public UnrestrictedGame(boolean playerFirst, Difficulty diff) {
+	public UnrestrictedGame(int turnPolicy, Difficulty diff) {
 		super();
-		this.playerFirst = playerFirst;
+		this.turnPolicy = turnPolicy;
+		updatePlayerFirst();
+		
 		bg.setupBoard(new UnrestrictedBoard());
 		com = new ComPlayer((UnrestrictedBoard) bg.getBoard(), !playerFirst);
 		if (playerFirst)
 			isPlayerTurn = true;
+	}
+	
+	public void updatePlayerFirst() {
+		switch(turnPolicy) {
+		case player_always_black:
+			playerFirst = true;
+		case player_always_white:
+			playerFirst = false;
+		case random_turn:
+			playerFirst = rng.nextDouble() >= 0.5;
+		case alternating_turn:
+			playerFirst = true;
+		}
 	}
 
 	@Override
@@ -45,5 +61,11 @@ public class UnrestrictedGame extends AbstractGame {
 		super.gameStart();
 		if (!playerFirst)
 			makeFirstComMove();
+	}
+
+	@Override
+	public void afterGameCleanup() {
+		// TODO Auto-generated method stub
+		updatePlayerFirst();
 	}
 }

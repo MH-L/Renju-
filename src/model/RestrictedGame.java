@@ -15,4 +15,10 @@ public class RestrictedGame extends AbstractGame {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public void afterGameCleanup() {
+		// TODO Auto-generated method stub
+		
+	}
 }

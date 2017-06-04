@@ -13,4 +13,10 @@ public class RestrictedCvCGame extends AbstractGame {
 		
 	}
 
+	@Override
+	public void afterGameCleanup() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
