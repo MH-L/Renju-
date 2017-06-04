@@ -45,6 +45,7 @@ public abstract class AbstractBoard {
 	protected int lastMove = invalid_location;
 	
 	protected Map<Integer, List<Integer>> adjacentMap;
+	protected Map<Integer, List<Integer>> adjacentMapRed;
 	protected Random rng;
 	public static List<Map<Integer, Integer>> evalMapsBlack;
 	public static List<Map<Integer, Integer>> evalMapsWhite;
@@ -56,6 +57,7 @@ public abstract class AbstractBoard {
 		ltorDiag = new int[width + height - 1];
 		rtolDiag = new int[width + height - 1];
 		adjacentMap = new HashMap<>();
+		adjacentMapRed = new HashMap<>();
 		evalMapsBlack = new ArrayList<>(width + 1);
 		evalMapsWhite = new ArrayList<>(width + 1);
 		for (int i = 0; i <= width; i++) {
@@ -63,6 +65,7 @@ public abstract class AbstractBoard {
 			evalMapsWhite.add(new HashMap<>());
 		}
 		generateAdjacentMoves();
+		genAdjMovesReduced();
 	}
 	
 	/**
@@ -453,7 +456,7 @@ public abstract class AbstractBoard {
 				}
 			}
 			
-			adjacentMap.put(position, returnVal);
+			adjacentMapRed.put(position, returnVal);
 		}
 	}
 	
@@ -671,13 +674,13 @@ public abstract class AbstractBoard {
 		for (int i = 0; i < ltorDiag.length; i++) {
 			int fourResult = lineHasFour(ltorDiag[i], Math.min(i + 1, width + height - 1 - i), first);
 			if (fourResult >= 0)
-				return fourResult;
+				return lrDiagToBoardPosition(i, fourResult);
 		}
 		
 		for (int i = 0; i < rtolDiag.length; i++) {
 			int fourResult = lineHasFour(rtolDiag[i], Math.min(i + 1, width + height - 1 - i), first);
 			if (fourResult >= 0)
-				return fourResult;
+				return rlDiagToBoardPosition(i, fourResult);
 		}
 		
 		return -3;
@@ -730,7 +733,7 @@ public abstract class AbstractBoard {
 				emptyCount++;
 			
 			if (selfCount >= 4 && emptyCount >= 1)
-				for (int j = i; j < i + 5; j++) {
+				for (int j = i + 1; j <= i + 5; j++) {
 					if (sb.charAt(j) == '0')
 						return j;
 				}
@@ -744,7 +747,7 @@ public abstract class AbstractBoard {
 		Map<Integer, Integer> returnVal = new HashMap<>();
 		Set<Integer> possibleLocs = new HashSet<>();
 		for (int stone : selfStones) {
-			for (int adj : adjacentMap.get(stone)) {
+			for (int adj : adjacentMapRed.get(stone)) {
 				if (isSquareEmpty(adj))
 					possibleLocs.add(adj);
 			}
@@ -759,12 +762,14 @@ public abstract class AbstractBoard {
 			int rowRes = lineHasFour(rowBased[ri], width, first);
 			if (rowRes >= 0) {
 				returnVal.put(loc, ri * width + rowRes);
+				withdrawMove(loc);
 				continue;
 			}
 			
 			int colRes = lineHasFour(colBased[ci], height, first);
 			if (colRes >= 0) {
 				returnVal.put(loc, colRes * width + ci);
+				withdrawMove(loc);
 				continue;
 			}
 			
@@ -772,13 +777,15 @@ public abstract class AbstractBoard {
 					width + height - lri - 1), first);
 			if (lrDiagRes >= 0) {
 				returnVal.put(loc, lrDiagToBoardPosition(lri, lrDiagRes));
+				withdrawMove(loc);
 				continue;
 			}
 			
-			int rlDiagRes = lineHasFour(ltorDiag[rli], Math.min(rli + 1, 
+			int rlDiagRes = lineHasFour(rtolDiag[rli], Math.min(rli + 1, 
 					width + height - rli - 1), first);
 			if (rlDiagRes >= 0)
 				returnVal.put(loc, rlDiagToBoardPosition(rli, rlDiagRes));
+			withdrawMove(loc);
 		}
 		
 		return returnVal;
@@ -797,4 +804,6 @@ public abstract class AbstractBoard {
 		
 		return returnVal;
 	}
+	
+	public abstract boolean someoneWins();
 }

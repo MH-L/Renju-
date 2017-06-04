@@ -62,6 +62,7 @@ public class BoardGraphics extends JPanel {
 							// TODO maybe display warnings??
 							return;
 						}
+						
 						if (square.isUnoccupied()) {
 							if (game.isBlackActive()) {
 								square.setStone(true);
@@ -87,9 +88,17 @@ public class BoardGraphics extends JPanel {
 		int rowIdx = move / width;
 		int colIdx = move % width;
 		grid[rowIdx][colIdx].setStone(first);
+		if (bd.someoneWins()) {
+			
+		}
 	}
 	
 	public void reset() {
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				grid[i][j].reset();
+			}
+		}
 		bd.reset();
 	}
 	
@@ -130,6 +139,11 @@ public class BoardGraphics extends JPanel {
 				game.errorRendering();
 			}
 			stone = isFirst ? Stone.FIRST : Stone.SECOND;
+		}
+		
+		public void resetSq() {
+			setIcon(null);
+			stone = Stone.UNOCCUPIED;
 		}
 
 		public Stone getStone() {

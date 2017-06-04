@@ -140,7 +140,7 @@ public class BoardTree {
 			bd.withdrawMove(pair.getKey());
 			bd.withdrawMove(pair.getValue());
 			if (childResult >= 0)
-				return childResult;
+				return pair.getKey();
 		}
 		
 		return -100;
