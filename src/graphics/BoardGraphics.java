@@ -98,9 +98,11 @@ public class BoardGraphics extends JPanel {
 		grid[rowIdx][colIdx].setStone(first);
 		if (bd.someoneWins()) {
 			game.displayWinnerInfo(false);
+			game.afterGameCleanup();
 			reset();
 		} else if (bd.boardFull()) {
 			game.displayTieMessageBoardFull();
+			game.afterGameCleanup();
 			reset();
 		}
 	}

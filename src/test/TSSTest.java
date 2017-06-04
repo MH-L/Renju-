@@ -2,12 +2,15 @@ package test;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import algorithm.BoardTree;
+import model.AbstractBoard;
 import model.UnrestrictedBoard;
 
 /**
@@ -102,5 +105,25 @@ public class TSSTest {
 		bd.updateBoard(157, false);
 		bd.render();
 		System.out.println(BoardTree.threatSpaceSearch(bd, 4, true));
+	}
+	
+	@Test
+	public void threatSearcherBugTest() {
+		List<Integer> xcoord = Arrays.asList(6,8,9,5,7,4,8,6);
+		List<Integer> ycoord = Arrays.asList(5,6,6,7,7,8,9,10);
+		updateBoardInBatch(bd, ycoord, xcoord, true);
+		xcoord = Arrays.asList(6,6,8,5,6,7,6);
+		ycoord = Arrays.asList(6,7,7,8,8,8,9);
+		updateBoardInBatch(bd, ycoord, xcoord, false);
+		bd.render();
+		Map<Integer, Integer> thLocations = bd.findThreatLocation(false);
+		System.out.println(BoardTree.threatSpaceSearch(bd, 20, false));
+	}
+	
+	private void updateBoardInBatch(AbstractBoard bd, List<Integer> ycoord, 
+			List<Integer> xcoord, boolean first) {
+		for (int i = 0; i < ycoord.size(); i++) {
+			bd.updateBoard(ycoord.get(i)*AbstractBoard.width + xcoord.get(i), first);
+		}
 	}
 }

@@ -350,6 +350,15 @@ public abstract class AbstractBoard {
 		String patClosedThree2 = first ? "233300" : "322200";
 		String patClosedThreeEnd = first ? "00333" : "00222";
 		String patClosedThreeStart = first ? "33300" : "22200";
+		String patClosedThreesp = first ? "2033302" : "3022203";
+		String patClosedThreespStart = first ? "033302" : "022203";
+		String patClosedThreespEnd = first ? "203330" : "302220";
+		String patClosedJumpThree = first ? "233030" : "322020";
+		String patClosedJumpThree2 = first ? "030332" : "020223";
+		String patClosedJumpThree3 = first ? "230330" : "320220";
+		String patClosedJumpThree4 = first ? "033032" : "022023";
+		String patClosedJumpThreeStart = first ? "33030" : "22020";
+		String patClosedJumpThreeEnd = first ? "03033" : "02022";
 		String patOpenTwo = first ? "003300" : "002200";
 		String patSJTwo = first ? "0030300" : "0020200";
 		String patBJTwo = first ? "030030" : "020020";
@@ -400,6 +409,14 @@ public abstract class AbstractBoard {
 		}
 		curScore += closedThreeCount * closed_three;
 		
+		if (base4Str.contains(patClosedJumpThree) || base4Str.contains(patClosedJumpThree2)
+				|| base4Str.contains(patClosedJumpThree3) || base4Str.contains(patClosedJumpThree4)
+				|| base4Str.startsWith(patClosedJumpThreeStart) || base4Str.endsWith(patClosedJumpThreeEnd))
+			curScore += cjump_three;
+		
+		if (base4Str.contains(patClosedThreesp) || base4Str.startsWith(patClosedThreespStart)
+				|| base4Str.endsWith(patClosedThreespEnd))
+			curScore += closed_three;
 		startPos = 0;
 		int openTwoCount = 0;
 		// TODO revise the definition of "open two"
@@ -538,7 +555,7 @@ public abstract class AbstractBoard {
 	}
 	
 	public int lrDiagToBoardPosition(int lrIndex, int indexOnLR) {
-		if (lrIndex <= width) {
+		if (lrIndex < width) {
 			int rowIndex = indexOnLR;
 			int colIndex = (width - 1 - lrIndex) + indexOnLR;
 			return rowIndex * width + colIndex;
@@ -550,7 +567,7 @@ public abstract class AbstractBoard {
 	}
 	
 	public int rlDiagToBoardPosition(int rlIndex, int indexOnRL) {
-		if (rlIndex <= width) {
+		if (rlIndex < width) {
 			int rowIndex = indexOnRL;
 			int colIndex = rlIndex - indexOnRL;
 			return rowIndex * width + colIndex;

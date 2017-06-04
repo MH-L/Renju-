@@ -56,7 +56,7 @@ public abstract class AbstractGame {
 	protected JPanel historyPanel;
 	protected JPanel buttonPanel;
 	protected JPanel functionPanel;
-	private JLabel gameStarted;
+	protected JLabel gameStarted;
 	protected JTextArea messageArea;
 	protected BoardGraphics bg;
 	

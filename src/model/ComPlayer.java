@@ -15,13 +15,13 @@ public class ComPlayer extends AbstractPlayer {
 	
 	@Override
 	public int makeMove() {
-		if (moveNum > 5) {
-			int threatSearch = BoardTree.threatSpaceSearch(gameBoard, 20, isComFirst);
-			if (threatSearch >= 0)
-				return threatSearch;
+		int threatSearch = BoardTree.threatSpaceSearch(gameBoard, 25, isComFirst);
+		if (threatSearch >= 0) {
+			System.out.println("Threat space searcher found sequence: " + threatSearch);
+			return threatSearch;
 		}
 		
-		return BoardTree.alphaBeta(gameBoard, 6, Integer.MIN_VALUE, 
+		return BoardTree.alphaBeta(gameBoard, 7, Integer.MIN_VALUE, 
 				Integer.MAX_VALUE, isComFirst, new int[]{0});
 	}
 

@@ -25,12 +25,19 @@ public class UnrestrictedGame extends AbstractGame {
 		switch(turnPolicy) {
 		case player_always_black:
 			playerFirst = true;
+			break;
 		case player_always_white:
 			playerFirst = false;
+			break;
 		case random_turn:
 			playerFirst = rng.nextDouble() >= 0.5;
+			break;
 		case alternating_turn:
 			playerFirst = true;
+			break;
+		default:
+			playerFirst = true;
+			break;
 		}
 	}
 
@@ -67,5 +74,7 @@ public class UnrestrictedGame extends AbstractGame {
 	public void afterGameCleanup() {
 		// TODO Auto-generated method stub
 		updatePlayerFirst();
+		gameStarted.setText("Game not yet started.");
+		activePlayer = true;
 	}
 }

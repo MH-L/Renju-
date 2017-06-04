@@ -54,7 +54,7 @@ public class BoardTree {
 			int inc = bd.getInc(mv, maximizing);
 			// TODO best-looking moves are checked (Allis, 1994)
 			// TODO inc function might be buggy
-			if (inc > 0) {
+			if (inc > 3) {
 				nmsorted.add(mv);
 				incMap.put(mv, inc);
 			}
@@ -76,8 +76,8 @@ public class BoardTree {
 			nmsorted.addAll(nextMoves);
 		
 		Integer maxInc = incMap.get(nmsorted.get(0));
-		if (maxInc != null && maxInc >= AbstractBoard.winning_score) {
-			value[0] = AbstractBoard.winning_score;
+		if (maxInc != null && maxInc >= AbstractBoard.winning_score / 2) {
+			value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
 			return nmsorted.get(0);
 		}
 		
@@ -140,6 +140,7 @@ public class BoardTree {
 			return selfWinningLoc;
 		
 		Map<Integer, Integer> threatAndCounter = bd.findThreatLocation(first);
+//		System.out.println(threatAndCounter.size() + " threat locations found!");
 		
 		for (Entry<Integer, Integer> pair : threatAndCounter.entrySet()) {
 			bd.updateBoard(pair.getKey(), first);

@@ -111,6 +111,20 @@ public class BoardTreeTest {
 				false, new int[]{0}));
 	}
 	
+	@Test
+	public void testNonsense() {
+		List<Integer> xcoord = Arrays.asList(5,8,10,8,12,6,9,11,5,8,13,5,7,8,10,13,5,10,13,7,12,6,11,14);
+		List<Integer> ycoord = Arrays.asList(2,3,3,4,4,5,5,5,6,6,6,7,7,7,7,7,8,8,8,9,9,10,10,10);
+		updateBoardInBatch(bd, ycoord, xcoord, true);
+		xcoord = Arrays.asList(7,6,11,7,9,8,10,13,6,7,9,10,11,12,6,9,11,12,6,12,5,6,13);
+		ycoord = Arrays.asList(2,3,3,4,4,5,5,5,6,6,6,6,6,6,7,7,7,7,8,8,9,9,9);
+		updateBoardInBatch(bd, ycoord, xcoord, false);
+		bd.render();
+		System.out.println(BoardTree.alphaBeta(bd, 6, Integer.MIN_VALUE, Integer.MAX_VALUE, 
+				false, new int[]{0}));
+
+	}
+	
 	private void updateBoardInBatch(AbstractBoard bd, List<Integer> ycoord, 
 			List<Integer> xcoord, boolean first) {
 		for (int i = 0; i < ycoord.size(); i++) {
