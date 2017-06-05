@@ -113,7 +113,7 @@ public class UnrestrictedGame extends AbstractGame {
 		btnHint.setEnabled(false);
 		activePlayer = true;
 		try {
-			LocalStorage.updateGameStats(com.getDiff(), result);
+			LocalStorage.updateGameStats(com.getDiff(), result, playerFirst);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

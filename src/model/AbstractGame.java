@@ -8,6 +8,8 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.util.List;
 import java.util.Random;
 
 import javax.swing.JButton;
@@ -19,11 +21,14 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
+import javax.swing.table.DefaultTableModel;
 
 import graphics.BoardGraphics;
+import storage.LocalStorage;
 
 public abstract class AbstractGame {
 	public static final int player_always_black = 1;
@@ -187,6 +192,21 @@ public abstract class AbstractGame {
 				Main.displayWelcomeFrame();
 			}
 		});
+		JMenuItem clearStats = new JMenuItem("Clear Stats");
+		JMenuItem showStats = new JMenuItem("Show Stats");
+		clearStats.setFont(smallGameFont);
+		showStats.setFont(smallGameFont);
+		gameMenu.addSeparator();
+		gameMenu.add(clearStats);
+		gameMenu.addSeparator();
+		gameMenu.add(showStats);
+		clearStats.setEnabled(false);
+		showStats.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				showStatsWindow();
+			}
+		});
 
 		JMenu helpMenu = new JMenu("Help");
 		helpMenu.setPreferredSize(new Dimension(166, 60));
@@ -217,6 +237,50 @@ public abstract class AbstractGame {
 		menus.add(optionsMenu);
 		menus.setPreferredSize(new Dimension(500, 60));
 		return menus;
+	}
+	
+	private static void showStatsWindow() {
+		JFrame statsFrame = new JFrame("Stats");
+		statsFrame.setVisible(true);
+		statsFrame.setSize(defaultFrameDimension);
+		statsFrame.setLayout(new BorderLayout());
+		statsFrame.setTitle("Gomoku Freestyle Game Statistics");
+		List<Integer> gameStatsAll;
+		try {
+			gameStatsAll = LocalStorage.readStatsFile();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
+		String[] colNames = {"Level", "Turn", "Wins", "Losses", "Ties"};
+		String[][] data = {
+				{"Novice", "Black", gameStatsAll.get(0) + "", gameStatsAll.get(1) + "", gameStatsAll.get(2) + ""},
+				{"Novice", "White", gameStatsAll.get(12) + "", gameStatsAll.get(13) + "", gameStatsAll.get(14) + ""},
+				{"Intermediate", "Black", gameStatsAll.get(3) + "", gameStatsAll.get(4) + "", gameStatsAll.get(5) + ""},
+				{"Intermediate", "White", gameStatsAll.get(15) + "", gameStatsAll.get(16) + "", gameStatsAll.get(17) + ""},
+				{"Advanced", "Black", gameStatsAll.get(6) + "", gameStatsAll.get(7) + "", gameStatsAll.get(8) + ""},
+				{"Advanced", "White", gameStatsAll.get(18) + "", gameStatsAll.get(19) + "", gameStatsAll.get(20) + ""},
+				{"Ultimate", "Black", gameStatsAll.get(9) + "", gameStatsAll.get(10) + "", gameStatsAll.get(11) + ""},
+				{"Ultimate", "White", gameStatsAll.get(21) + "", gameStatsAll.get(22) + "", gameStatsAll.get(23) + ""},
+		};
+		
+		DefaultTableModel dtm = new DefaultTableModel(data, colNames) {
+			private static final long serialVersionUID = 5415080212132655408L;
+
+			@Override
+		    public boolean isCellEditable(int row, int column) {
+		       return false;
+		    }
+		};
+		
+		JTable table = new JTable();
+		table.setFont(new Font("Calibri", Font.PLAIN, 25));
+		table.setRowHeight(40);
+		table.getTableHeader().setPreferredSize(new Dimension(500, 60));
+		table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 28));
+		table.setModel(dtm);
+		statsFrame.add(table.getTableHeader(), BorderLayout.PAGE_START);
+		statsFrame.add(table, BorderLayout.CENTER);
 	}
 	
 	public void displayOccupiedWarning() {
