@@ -16,6 +16,7 @@ public class UnrestrictedGame extends AbstractGame {
 	private boolean playerFirst;
 	private ComPlayer com;
 	private int turnPolicy;
+	private boolean playerDropped = false;
 	
 	public UnrestrictedGame(int turnPolicy, Difficulty diff) {
 		super();
@@ -103,6 +104,11 @@ public class UnrestrictedGame extends AbstractGame {
 		if (!playerFirst)
 			makeFirstComMove();
 	}
+	
+	@Override
+	public void playerPlayed() {
+		playerDropped = true;
+	}
 
 	@Override
 	public void afterGameCleanup(int result) {
@@ -112,6 +118,7 @@ public class UnrestrictedGame extends AbstractGame {
 		btnGiveUp.setEnabled(false);
 		btnHint.setEnabled(false);
 		activePlayer = true;
+		playerDropped = false;
 		try {
 			LocalStorage.updateGameStats(com.getDiff(), result, playerFirst);
 		} catch (IOException e) {
@@ -122,5 +129,28 @@ public class UnrestrictedGame extends AbstractGame {
 	@Override
 	public boolean playerCanMove() {
 		return activePlayer == playerFirst;
+	}
+	
+	@Override
+	public boolean exitCheck() {
+		if (!playerDropped)
+			return true;
+		
+		int confirmValue = JOptionPane.showConfirmDialog(mainFrame,
+	            "Are you sure you want to exit the current game? The current game"
+	            + "\nwill be counted as a loss towards your game stats.", "Confirm exiting",
+	            JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+		
+		if (confirmValue == JOptionPane.YES_OPTION) {
+			try {
+				LocalStorage.updateGameStats(com.getDiff(), 1, playerFirst);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			return true;
+		}
+		
+		return false;
 	}
 }

@@ -170,7 +170,8 @@ public abstract class AbstractGame {
 		newGame.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				gameStart();
+				if (exitCheck())
+					gameStart();
 			}
 		});
 
@@ -188,8 +189,10 @@ public abstract class AbstractGame {
 		exit.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				mainFrame.dispose();
-				Main.displayWelcomeFrame();
+				if (exitCheck()) {
+					mainFrame.dispose();
+					Main.displayWelcomeFrame();
+				}
 			}
 		});
 		JMenuItem clearStats = new JMenuItem("Clear Stats");
@@ -342,6 +345,12 @@ public abstract class AbstractGame {
 	public abstract void comMove();
 	
 	public abstract void afterGameCleanup(int result);
+	
+	public boolean exitCheck() {
+		return true;
+	}
+	
+	public void playerPlayed() {}
 	
 	public boolean isBlackActive() {
 		return activePlayer;

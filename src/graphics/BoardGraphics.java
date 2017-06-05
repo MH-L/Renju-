@@ -63,6 +63,7 @@ public class BoardGraphics extends JPanel {
 						}
 						
 						if (square.isUnoccupied()) {
+							game.playerPlayed();
 							if (game.isBlackActive()) {
 								square.setStone(true);
 								bd.updateBoard(square.y * width + square.x, true);
