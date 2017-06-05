@@ -1,16 +1,17 @@
 package model;
 
 import algorithm.BoardTree;
+import model.AbstractGame.Difficulty;
 
 public class ComPlayer extends AbstractPlayer {
 	private UnrestrictedBoard gameBoard;
 	private boolean isComFirst;
-	private int moveNum = 0;
+	private Difficulty diff;
 	
-	ComPlayer(UnrestrictedBoard bd, boolean isComFirst) {
+	ComPlayer(UnrestrictedBoard bd, boolean isComFirst, Difficulty diff) {
 		gameBoard = bd;
 		this.isComFirst = isComFirst;
-		moveNum = 0;
+		this.diff = diff;
 	}
 	
 	@Override

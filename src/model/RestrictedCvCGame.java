@@ -19,4 +19,10 @@ public class RestrictedCvCGame extends AbstractGame {
 		
 	}
 
+	@Override
+	public boolean playerCanMove() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }

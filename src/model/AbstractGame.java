@@ -62,7 +62,6 @@ public abstract class AbstractGame {
 	
 	protected AbstractPlayer player1;
 	protected AbstractPlayer player2;
-	protected boolean isPlayerTurn = false;
 	protected boolean activePlayer = true;
 	protected Random rng;
 	
@@ -266,11 +265,10 @@ public abstract class AbstractGame {
 		bg.reset();
 		bg.activate();
 		gameStarted.setText("Game Started.");
+		activePlayer = true;
 	}
 	
-	public boolean playerCanMove() {
-		return isPlayerTurn;
-	}
+	public abstract boolean playerCanMove();
 	
 	public abstract void updateTurnStatus();
 	

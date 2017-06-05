@@ -16,9 +16,7 @@ public class UnrestrictedGame extends AbstractGame {
 		updatePlayerFirst();
 		
 		bg.setupBoard(new UnrestrictedBoard());
-		com = new ComPlayer((UnrestrictedBoard) bg.getBoard(), !playerFirst);
-		if (playerFirst)
-			isPlayerTurn = true;
+		com = new ComPlayer((UnrestrictedBoard) bg.getBoard(), !playerFirst, diff);
 	}
 	
 	public void updatePlayerFirst() {
@@ -44,7 +42,6 @@ public class UnrestrictedGame extends AbstractGame {
 	@Override
 	public void updateTurnStatus() {
 		activePlayer = !activePlayer;
-		isPlayerTurn = !isPlayerTurn;
 	}
 	
 	private void makeFirstComMove() {
@@ -76,5 +73,10 @@ public class UnrestrictedGame extends AbstractGame {
 		updatePlayerFirst();
 		gameStarted.setText("Game not yet started.");
 		activePlayer = true;
+	}
+
+	@Override
+	public boolean playerCanMove() {
+		return activePlayer == playerFirst;
 	}
 }

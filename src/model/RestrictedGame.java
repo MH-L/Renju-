@@ -7,7 +7,7 @@ public class RestrictedGame extends AbstractGame {
 
 	@Override
 	public void updateTurnStatus() {
-		isPlayerTurn = !isPlayerTurn;
+		activePlayer = !activePlayer;
 	}
 
 	@Override
@@ -20,5 +20,11 @@ public class RestrictedGame extends AbstractGame {
 	public void afterGameCleanup() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public boolean playerCanMove() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }
