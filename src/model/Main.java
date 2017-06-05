@@ -89,7 +89,17 @@ public class Main {
 		frame.setVisible(true);
 		frame.setResizable(false);
 		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		AbstractGame.addCloseConfirmation(frame);
+		frame.addWindowListener(new java.awt.event.WindowAdapter() {
+		    @Override
+		    public void windowClosing(java.awt.event.WindowEvent windowEvent) {		    	
+		        if (JOptionPane.showConfirmDialog(frame,
+		            "Are you sure to close this window?", "Confirm Closing",
+		            JOptionPane.YES_NO_OPTION,
+		            JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
+		            System.exit(0);
+		        }
+		    }
+		});
 		JPanel btnPanel = new JPanel();
 		frame.add(btnPanel);
 		JButton singleplayerBtn = getPlainLookbtn("Singleplayer", "Open Sans", 28, Font.PLAIN, Color.CYAN);
@@ -127,8 +137,7 @@ public class Main {
 		aiGameBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				game = new UnrestrictedCvCGame();
-				frame.dispose();
+				popAIGameOptionWindow(frame);
 			}
 		});
 
@@ -149,6 +158,108 @@ public class Main {
 		btn.setFocusPainted(false);
 		return btn;
 	}
+	
+	private static void popAIGameOptionWindow(JFrame welcomeFrame) {
+		JFrame optionWindow = new JFrame("AI Options");
+		optionWindow.setVisible(true);
+		optionWindow.setSize(560, 720);
+		JPanel optionPanel = new JPanel();
+		BoxLayout layout = new BoxLayout(optionPanel, BoxLayout.Y_AXIS);
+		optionPanel.setLayout(layout);
+		optionWindow.add(optionPanel);
+		optionPanel.setBorder(new EmptyBorder(20, 5, 20, 5));
+		JLabel titleLabel = new JLabel("Game Options");
+		titleLabel.setBorder(new EmptyBorder(0, 0, 20, 0));
+		titleLabel.setFont(new Font("Tahoma", Font.PLAIN, 48));
+		optionPanel.add(titleLabel);
+		titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		UIManager.put("RadioButton.font", radioBtnsFont);
+		JLabel blackDiff = new JLabel("Choose black player level");
+		blackDiff.setFont(panelSubTitleFont);
+		JLabel whiteDiff = new JLabel("Choose white player level");
+		whiteDiff.setFont(panelSubTitleFont);
+		JRadioButton noviceDiffOption = new JRadioButton("Novice");
+		JRadioButton intermediateDiffOption = new JRadioButton("Intermediate");
+		JRadioButton advancedDiffOption = new JRadioButton("Advanced (slow)");
+		JRadioButton ultimateDiffOption = new JRadioButton("Ultimate (very slow)");
+		JRadioButton noviceForWhite = new JRadioButton("Novice");
+		JRadioButton intermediateForWhite = new JRadioButton("Intermediate");
+		JRadioButton advancedForWhite = new JRadioButton("Advanced (slow)");
+		JRadioButton ultimateForWhite = new JRadioButton("Ultimate (very slow)");
+		
+		JPanel blackPanel = new JPanel();
+		blackPanel.add(noviceDiffOption);
+		blackPanel.add(intermediateDiffOption);
+		blackPanel.add(advancedDiffOption);
+		blackPanel.add(ultimateDiffOption);
+		JPanel whitePanel = new JPanel();
+		whitePanel.add(noviceForWhite);
+		whitePanel.add(intermediateForWhite);
+		whitePanel.add(advancedForWhite);
+		whitePanel.add(ultimateForWhite);
+		optionPanel.add(blackDiff);
+		optionPanel.add(blackPanel);
+		optionPanel.add(whiteDiff);
+		optionPanel.add(whitePanel);
+		blackDiff.setAlignmentX(Component.CENTER_ALIGNMENT);
+		whiteDiff.setAlignmentX(Component.CENTER_ALIGNMENT);
+		noviceDiffOption.setAlignmentX(Component.CENTER_ALIGNMENT);
+		noviceForWhite.setAlignmentX(Component.CENTER_ALIGNMENT);
+		intermediateDiffOption.setAlignmentX(Component.CENTER_ALIGNMENT);
+		intermediateForWhite.setAlignmentX(Component.CENTER_ALIGNMENT);
+		advancedDiffOption.setAlignmentX(Component.CENTER_ALIGNMENT);
+		advancedForWhite.setAlignmentX(Component.CENTER_ALIGNMENT);
+		ultimateDiffOption.setAlignmentX(Component.CENTER_ALIGNMENT);
+		ultimateForWhite.setAlignmentX(Component.CENTER_ALIGNMENT);
+		
+		ButtonGroup blackGroup = new ButtonGroup();
+		blackGroup.add(noviceDiffOption);
+		blackGroup.add(intermediateDiffOption);
+		blackGroup.add(advancedDiffOption);
+		blackGroup.add(ultimateDiffOption);
+		ButtonGroup whiteGroup = new ButtonGroup();
+		whiteGroup.add(noviceForWhite);
+		whiteGroup.add(intermediateForWhite);
+		whiteGroup.add(advancedForWhite);
+		whiteGroup.add(ultimateForWhite);
+		intermediateDiffOption.setSelected(true);
+		advancedForWhite.setSelected(true);
+		
+		
+		JButton playButton = Main.getPlainLookbtn("Play!", "Calibri", 33, Font.PLAIN, Color.MAGENTA);
+		optionPanel.add(Box.createVerticalStrut(20));
+		optionPanel.add(playButton);
+		playButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+		playButton.setMargin(new Insets(0, 50, 0, 50));
+		playButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				Difficulty firstDiff = null;
+				Difficulty secondDiff = null;
+				if (noviceDiffOption.isSelected())
+					firstDiff = Difficulty.novice;
+				else if (intermediateDiffOption.isSelected())
+					firstDiff = Difficulty.intermediate;
+				else if (advancedDiffOption.isSelected())
+					firstDiff = Difficulty.advanced;
+				else
+					firstDiff = Difficulty.ultimate;
+				
+				if (noviceForWhite.isSelected())
+					secondDiff = Difficulty.novice;
+				else if (intermediateForWhite.isSelected())
+					secondDiff = Difficulty.intermediate;
+				else if (advancedForWhite.isSelected())
+					secondDiff = Difficulty.advanced;
+				else
+					secondDiff = Difficulty.ultimate;
+				
+				optionWindow.dispose();
+				welcomeFrame.dispose();
+				new UnrestrictedCvCGame(firstDiff, secondDiff);
+			}
+		});
+	}
 
 	private static void popSinglePlayerGameOptionWindow(JFrame welcomeFrame) {
 		JFrame singlePlayerOptionFrame = new JFrame("Options");
@@ -167,7 +278,6 @@ public class Main {
 		titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 		UIManager.put("RadioButton.font", radioBtnsFont);
-		// TODO make this thing look nicer!!!!!!
 		JLabel chooseTurn = new JLabel("Choose your turn");
 		chooseTurn.setFont(panelSubTitleFont);
 		JLabel chooseDiff = new JLabel("Choose your difficulty");
@@ -189,7 +299,6 @@ public class Main {
 		takeTurnOption.setAlignmentX(Component.CENTER_ALIGNMENT);
 		senteOption.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-		new JSeparator(SwingConstants.HORIZONTAL);
 		JPanel turnOptionPanel = new JPanel();
 		turnOptionPanel.add(senteOption);
 		turnOptionPanel.add(goteOption);

@@ -833,4 +833,10 @@ public abstract class AbstractBoard {
 		
 		return true;
 	}
+	
+	public int getFirstRandomMove() {
+		int randomX = new Random().nextInt(3);
+		int randomY = new Random().nextInt(3);
+		return (6 + randomY) * width + (6 + randomY);
+	}
 }

@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -48,6 +49,15 @@ public class BoardTree {
 		// Sort next moves based on increment of heuristic function in descending order
 		// (larger heuristic improvements will be checked earlier)
 		Set<Integer> nextMoves = bd.nextMoves();
+		if (nextMoves.isEmpty()) {
+			if (bd.boardFull()) {
+				value[0] = bd.evaluateBoard();
+				return -1;
+			} else {
+				return bd.getFirstRandomMove();
+			}
+		}
+		
 		List<Integer> nmsorted = new ArrayList<>();
 		Map<Integer, Integer> incMap = new HashMap<>();
 		for (int mv : nextMoves) {

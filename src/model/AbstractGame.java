@@ -317,10 +317,14 @@ public abstract class AbstractGame {
 				"Computer Making Move", JOptionPane.WARNING_MESSAGE);
 	}
 
-	public static void addCloseConfirmation(JFrame frame) {
+	public void addCloseConfirmation(JFrame frame) {
 		frame.addWindowListener(new java.awt.event.WindowAdapter() {
 		    @Override
 		    public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+		    	if (exitCheck()) {
+		    		System.exit(0);
+		    	}
+		    	
 		        if (JOptionPane.showConfirmDialog(frame,
 		            "Are you sure to close this window?", "Confirm Closing",
 		            JOptionPane.YES_NO_OPTION,
