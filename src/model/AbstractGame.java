@@ -30,13 +30,13 @@ public abstract class AbstractGame {
 	public static final int player_always_white = 2;
 	public static final int random_turn = 3;
 	public static final int alternating_turn = 4;
-	protected static final Font smallGameFont = new Font("Open Sans",
+	protected static final Font smallGameFont = new Font("Calibri",
 			Font.PLAIN, 28);
-	protected static final Font largeGameFont = new Font("Open Sans",
+	protected static final Font largeGameFont = new Font("Calibri",
 			Font.PLAIN, 40);
-	protected static final Font mediumGameFont = new Font("Open Sans",
+	protected static final Font mediumGameFont = new Font("Segoe UI",
 			Font.PLAIN, 35);
-	protected static final Font tinyGameFont = new Font("Open Sans",
+	protected static final Font tinyGameFont = new Font("Segoe UI",
 			Font.PLAIN, 16);
 	public static final Insets emptyMargin = new Insets(0, 0, 0, 0);
 	public static final Color boardColor = new Color(204, 204, 0);
@@ -51,6 +51,7 @@ public abstract class AbstractGame {
 	protected JButton btnStart;
 	protected JButton btnGiveUp;
 	protected JButton btnToFile;
+	protected JButton btnHint;
 	protected JPanel titlePanel;
 	protected JMenuBar menuBar;
 	protected JPanel historyPanel;
@@ -81,12 +82,15 @@ public abstract class AbstractGame {
 		mainPanel = new JPanel(new BorderLayout());
 		mainFrame = new JFrame("Gomoku Plus");
 		mainFrame.setSize(defaultFrameDimension);
-		btnStart = Main.getPlainLookbtn("Start!", "Open Sans", 23, Font.PLAIN, Color.CYAN);
-		btnGiveUp = Main.getPlainLookbtn("Give UP!", "Open Sans", 23, Font.PLAIN, Color.RED);
-		btnToFile = Main.getPlainLookbtn("To File", "Open Sans", 23, Font.PLAIN, Color.PINK);
+		btnStart = Main.getPlainLookbtn("Start!", "Segoe UI", 23, Font.PLAIN, Color.CYAN);
+		btnGiveUp = Main.getPlainLookbtn("Give UP!", "Segoe UI", 23, Font.PLAIN, Color.RED);
+		btnToFile = Main.getPlainLookbtn("To File", "Calibri", 23, Font.PLAIN, Color.PINK);
+		btnHint = Main.getPlainLookbtn("Hint", "Calibri", 23, Font.PLAIN, Color.BLUE);
 		btnStart.setMargin(emptyMargin);
 		btnGiveUp.setMargin(emptyMargin);
-		btnGiveUp.setMargin(emptyMargin);
+		btnHint.setMargin(emptyMargin);
+		btnGiveUp.setEnabled(false);
+		btnHint.setEnabled(false);
 		parentPanel.add(mainPanel, BorderLayout.WEST);
 		parentPanel.add(new JSeparator());
 		parentPanel.add(chatPanel, BorderLayout.EAST);
@@ -117,7 +121,6 @@ public abstract class AbstractGame {
 		menuBar = createJMenuBar();
 		mainFrame.setJMenuBar(menuBar);
 		buttonPanel.add(btnStart);
-		buttonPanel.add(btnGiveUp);
 		buttonPanel.add(btnToFile);
 		mainPanel.add(bg, BorderLayout.LINE_START);
 		mainPanel.add(new JSeparator(SwingConstants.VERTICAL));

@@ -72,10 +72,12 @@ public class BoardGraphics extends JPanel {
 							}
 							if (bd.someoneWins()) {
 								game.displayWinnerInfo(true);
+								game.afterGameCleanup();
 								reset();
 								return;
 							} else if (bd.boardFull()) {
 								game.displayTieMessageBoardFull();
+								game.afterGameCleanup();
 								reset();
 								return;
 							}

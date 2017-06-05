@@ -2,7 +2,6 @@ package model;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Insets;
@@ -25,24 +24,31 @@ import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.FontUIResource;
 
 import model.AbstractGame.Difficulty;
 
 public class Main {
 	private static AbstractGame game;
-	private static final Dimension textFieldDimension = new Dimension(200, 54);
-	private static final Dimension horizontalLineDimension = new Dimension(500, 3);
-	private static final Dimension signUpLoginBtnDimension = new Dimension(200, 70);
 	private static final Font panelSubTitleFont = new Font("Tahoma", Font.PLAIN, 35);
 	private static final Font radioBtnsFont = new Font("Calibri", Font.PLAIN, 32);
-	private static final Border panelEmptyBorder = new EmptyBorder(20, 20, 20, 20);
-	private static final int ROUND_CORNOR_RADIUS = 8;
-
+	
 	public static void main(String args[]) {
 		UIManager.put("OptionPane.messageFont", AbstractGame.smallGameFont);
 		UIManager.put("OptionPane.buttonFont", AbstractGame.smallGameFont);
+		setUIFont(new FontUIResource(new Font("Calibri", Font.PLAIN, 16)));
 		displayWelcomeFrame();
 	}
+	
+	public static void setUIFont (javax.swing.plaf.FontUIResource f){
+	    java.util.Enumeration keys = UIManager.getDefaults().keys();
+	    while (keys.hasMoreElements()) {
+	        Object key = keys.nextElement();
+	        Object value = UIManager.get (key);
+	        if (value != null && value instanceof javax.swing.plaf.FontUIResource)
+	    	    UIManager.put (key, f);
+	    }
+	} 
 
 	private static class RoundedBorder implements Border {
 		private int radius;
@@ -180,7 +186,7 @@ public class Main {
 		takeTurnOption.setAlignmentX(Component.CENTER_ALIGNMENT);
 		senteOption.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-		JSeparator buttonSep = new JSeparator(SwingConstants.HORIZONTAL);
+		new JSeparator(SwingConstants.HORIZONTAL);
 		JPanel turnOptionPanel = new JPanel();
 		turnOptionPanel.add(senteOption);
 		turnOptionPanel.add(goteOption);
@@ -245,9 +251,8 @@ public class Main {
 				
 				// TODO get user's choices
 				singlePlayerOptionFrame.dispose();
-				boolean isSente = false;
-				if (senteOption.isSelected())
-					isSente = true;
+				if (senteOption.isSelected()) {
+				}
 				if (noviceDiffOption.isSelected())
 					game = new UnrestrictedGame(turnPolicy, Difficulty.novice);
 				else if (intermediateDiffOption.isSelected())

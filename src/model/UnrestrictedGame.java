@@ -1,6 +1,10 @@
 package model;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Random;
+
+import javax.swing.JOptionPane;
 
 /**
  * Created by sireniazoe on 2017-05-26.
@@ -12,11 +16,39 @@ public class UnrestrictedGame extends AbstractGame {
 	
 	public UnrestrictedGame(int turnPolicy, Difficulty diff) {
 		super();
+		buttonPanel.add(btnGiveUp);
+		buttonPanel.add(btnHint);
 		this.turnPolicy = turnPolicy;
 		updatePlayerFirst();
 		
 		bg.setupBoard(new UnrestrictedBoard());
 		com = new ComPlayer((UnrestrictedBoard) bg.getBoard(), !playerFirst, diff);
+		addGiveUpBtnListerner();
+		addHintBtnListener();
+	}
+	
+	public void addHintBtnListener() {
+		btnHint.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(mainFrame, "Unfortunately, computer can't "
+						+ "hint you\nat this time. This is possibly due to you losing\nthe game in"
+						+ " a few moves.",
+						"Hint", JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
+	}
+	
+	public void addGiveUpBtnListerner() {
+		btnGiveUp.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				JOptionPane.showMessageDialog(mainFrame, "You lose. Better luck next time!",
+						"Game Over", JOptionPane.INFORMATION_MESSAGE);
+				bg.reset();
+				afterGameCleanup();
+			}
+		});
 	}
 	
 	public void updatePlayerFirst() {
@@ -63,6 +95,8 @@ public class UnrestrictedGame extends AbstractGame {
 	@Override
 	public void gameStart() {
 		super.gameStart();
+		btnGiveUp.setEnabled(true);
+		btnHint.setEnabled(true);
 		if (!playerFirst)
 			makeFirstComMove();
 	}
@@ -72,6 +106,8 @@ public class UnrestrictedGame extends AbstractGame {
 		// TODO Auto-generated method stub
 		updatePlayerFirst();
 		gameStarted.setText("Game not yet started.");
+		btnGiveUp.setEnabled(false);
+		btnHint.setEnabled(false);
 		activePlayer = true;
 	}
 
