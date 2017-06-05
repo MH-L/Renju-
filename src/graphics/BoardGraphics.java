@@ -72,12 +72,12 @@ public class BoardGraphics extends JPanel {
 							}
 							if (bd.someoneWins()) {
 								game.displayWinnerInfo(true);
-								game.afterGameCleanup();
+								game.afterGameCleanup(0);
 								reset();
 								return;
 							} else if (bd.boardFull()) {
 								game.displayTieMessageBoardFull();
-								game.afterGameCleanup();
+								game.afterGameCleanup(2);
 								reset();
 								return;
 							}
@@ -100,11 +100,11 @@ public class BoardGraphics extends JPanel {
 		grid[rowIdx][colIdx].setStone(first);
 		if (bd.someoneWins()) {
 			game.displayWinnerInfo(false);
-			game.afterGameCleanup();
+			game.afterGameCleanup(1);
 			reset();
 		} else if (bd.boardFull()) {
 			game.displayTieMessageBoardFull();
-			game.afterGameCleanup();
+			game.afterGameCleanup(2);
 			reset();
 		}
 	}

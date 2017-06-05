@@ -277,7 +277,7 @@ public abstract class AbstractGame {
 	
 	public abstract void comMove();
 	
-	public abstract void afterGameCleanup();
+	public abstract void afterGameCleanup(int result);
 	
 	public boolean isBlackActive() {
 		return activePlayer;

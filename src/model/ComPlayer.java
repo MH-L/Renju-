@@ -52,6 +52,10 @@ public class ComPlayer extends AbstractPlayer {
 					Integer.MAX_VALUE, isComFirst, new int[]{0});
 		}
 	}
+	
+	public Difficulty getDiff() {
+		return diff;
+	}
 
 	@Override
 	public boolean withdraw() {

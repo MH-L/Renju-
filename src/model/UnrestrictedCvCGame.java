@@ -14,7 +14,7 @@ public class UnrestrictedCvCGame extends AbstractGame {
 	}
 
 	@Override
-	public void afterGameCleanup() {
+	public void afterGameCleanup(int result) {
 		// TODO Auto-generated method stub
 		
 	}

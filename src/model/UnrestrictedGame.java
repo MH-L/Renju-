@@ -2,9 +2,12 @@ package model;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.Random;
 
 import javax.swing.JOptionPane;
+
+import storage.LocalStorage;
 
 /**
  * Created by sireniazoe on 2017-05-26.
@@ -46,7 +49,7 @@ public class UnrestrictedGame extends AbstractGame {
 				JOptionPane.showMessageDialog(mainFrame, "You lose. Better luck next time!",
 						"Game Over", JOptionPane.INFORMATION_MESSAGE);
 				bg.reset();
-				afterGameCleanup();
+				afterGameCleanup(1);
 			}
 		});
 	}
@@ -102,13 +105,18 @@ public class UnrestrictedGame extends AbstractGame {
 	}
 
 	@Override
-	public void afterGameCleanup() {
+	public void afterGameCleanup(int result) {
 		// TODO Auto-generated method stub
 		updatePlayerFirst();
 		gameStarted.setText("Game not yet started.");
 		btnGiveUp.setEnabled(false);
 		btnHint.setEnabled(false);
 		activePlayer = true;
+		try {
+			LocalStorage.updateGameStats(com.getDiff(), result);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override

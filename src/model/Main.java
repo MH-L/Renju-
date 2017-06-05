@@ -7,6 +7,7 @@ import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.Random;
 
 import javax.swing.Box;
@@ -27,13 +28,15 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.FontUIResource;
 
 import model.AbstractGame.Difficulty;
+import storage.LocalStorage;
 
 public class Main {
 	private static AbstractGame game;
 	private static final Font panelSubTitleFont = new Font("Tahoma", Font.PLAIN, 35);
 	private static final Font radioBtnsFont = new Font("Calibri", Font.PLAIN, 32);
 	
-	public static void main(String args[]) {
+	public static void main(String args[]) throws IOException {
+		LocalStorage.initializeLocalStorage();
 		UIManager.put("OptionPane.messageFont", AbstractGame.smallGameFont);
 		UIManager.put("OptionPane.buttonFont", AbstractGame.smallGameFont);
 		setUIFont(new FontUIResource(new Font("Calibri", Font.PLAIN, 16)));
