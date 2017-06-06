@@ -46,6 +46,10 @@ public class BoardTree {
 			return -1;
 		}
 		
+		// TODO prune next move if the opponent has threats of fours and threes
+		// Note that the former is easy, as implemented below; but the latter is
+		// hard since we may use global refutation so that threats are to be 
+		// dealt with in later moves.
 		int[] blocking = new int[]{0};
 		if (bd.formedThreat(!maximizing, lastMove, blocking)) {
 			int onlyMove = blocking[0];
@@ -244,6 +248,7 @@ public class BoardTree {
 	
 	/**
 	 * Threat-space search version 1; initial version only considers direct threats (4 stones).
+	 * (This version of threat space searcher does not guarantee to find the shortest sequence).
 	 * @param bd
 	 * @param depth
 	 * @param first
@@ -272,6 +277,47 @@ public class BoardTree {
 			bd.withdrawMove(pair.getValue());
 			if (childResult >= 0)
 				return pair.getKey();
+		}
+		
+		return -100;
+	}
+	
+	public static int threatSpaceSearchV2(UnrestrictedBoard bd, int depth, boolean first, 
+			int[] blocking, int[] pathLen) {
+		if (depth <= 0)
+			return -100;
+		
+		int selfWinningLoc = bd.canWinNextMove(first);
+		if (selfWinningLoc >= 0) {
+			pathLen[0] = 1;
+			return selfWinningLoc;
+		}
+		
+		int blockingLoc = bd.canWinNextMove(!first);
+		if (blockingLoc >= 0) {
+			blocking[0] = blockingLoc;
+			return -200;
+		}
+		
+		Map<Integer, Integer> threatAndCounter = bd.findThreatLocation(first);
+		
+		int bestChild = -1, bestLen = Integer.MAX_VALUE;
+		for (Entry<Integer, Integer> pair : threatAndCounter.entrySet()) {
+			int threatingMove = pair.getKey(), forcedMove = pair.getValue();
+			bd.updateBoard(threatingMove, first);
+			bd.updateBoard(forcedMove, !first);
+			int childResult = threatSpaceSearchV2(bd, depth - 1, first, blocking, pathLen);
+			bd.withdrawMove(threatingMove);
+			bd.withdrawMove(forcedMove);
+			if (childResult >= 0 && pathLen[0] < bestLen) {
+				bestChild = threatingMove;
+				bestLen = pathLen[0];
+			}
+		}
+		
+		if (bestChild >= 0) {
+			pathLen[0] = bestLen + 2;
+			return bestChild;
 		}
 		
 		return -100;

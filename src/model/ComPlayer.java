@@ -49,7 +49,7 @@ public class ComPlayer extends AbstractPlayer {
 					Integer.MAX_VALUE, isComFirst, new int[]{0}, lastMove);
 		case ultimate:
 			blocking = new int[]{0};
-			threatSearch = BoardTree.threatSpaceSearch(gameBoard, 30, isComFirst, blocking);
+			threatSearch = BoardTree.threatSpaceSearchV2(gameBoard, 30, isComFirst, blocking, new int[]{0});
 			if (threatSearch >= 0) {
 				System.out.println("Threat space searcher found sequence: " + threatSearch);
 				return threatSearch;
@@ -62,7 +62,7 @@ public class ComPlayer extends AbstractPlayer {
 					Integer.MAX_VALUE, isComFirst, new int[]{0}, lastMove);
 		default:
 			blocking = new int[]{0};
-			threatSearch = BoardTree.threatSpaceSearch(gameBoard, 25, isComFirst, blocking);
+			threatSearch = BoardTree.threatSpaceSearchV2(gameBoard, 25, isComFirst, blocking, new int[]{0});
 			if (threatSearch >= 0) {
 				System.out.println("Threat space searcher found sequence: " + threatSearch);
 				return threatSearch;

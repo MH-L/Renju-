@@ -108,6 +108,26 @@ public class TSSTest {
 	}
 	
 	@Test
+	public void tssV2Test() {
+		bd.updateBoard(66, true);
+		bd.updateBoard(111, false);
+		bd.updateBoard(112, true);
+		bd.updateBoard(125, false);
+		bd.updateBoard(126, true);
+		bd.updateBoard(127, true);
+		bd.updateBoard(140, true);
+		bd.updateBoard(141, false);
+		bd.updateBoard(142, true);
+		bd.updateBoard(146, false);
+		bd.updateBoard(154, false);
+		bd.updateBoard(157, false);
+		bd.render();
+		int len[] = new int[]{0};
+		System.out.println(BoardTree.threatSpaceSearchV2(bd, 20, true, new int[]{0}, len));
+		assertEquals(len[0], 7);
+	}
+	
+	@Test
 	public void threatSearcherBugTest() {
 		List<Integer> xcoord = Arrays.asList(6,8,9,5,7,4,8,6);
 		List<Integer> ycoord = Arrays.asList(5,6,6,7,7,8,9,10);
