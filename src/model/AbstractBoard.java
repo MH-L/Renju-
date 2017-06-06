@@ -165,6 +165,8 @@ public abstract class AbstractBoard {
 	 * @return
 	 */
 	public int evaluateBoardRng(int oscillation) {
+		if (oscillation == 0)
+			return evaluateBoardPV(true) - evaluateBoardPV(false);
 		int randomPurt = rng.nextInt(oscillation * 2 + 1);
 		randomPurt -= oscillation;
 		return evaluateBoardPV(true) - evaluateBoardPV(false) + randomPurt;
@@ -726,10 +728,7 @@ public abstract class AbstractBoard {
 		if (numPos < 5)
 			return -2;
 		
-		StringBuffer sb = new StringBuffer(Integer.toString(line, 4)).reverse();
-		while (sb.length() < numPos) {
-			sb.append('0');
-		}
+		StringBuffer sb = getBase4Str(line, numPos);
 
 		char selfChar = first ? '3' : '2';
 		int selfCount = 0, emptyCount = 0;
@@ -768,6 +767,136 @@ public abstract class AbstractBoard {
 		}
 		
 		return -2;
+	}
+	
+	private StringBuffer getBase4Str(int line, int numPos) {
+		StringBuffer sb = new StringBuffer(Integer.toString(line, 4)).reverse();
+		while (sb.length() < numPos) {
+			sb.append('0');
+		}
+		return sb;
+	}
+	
+	/**
+	 * Check whether the last move made by the opponent forms a four,
+	 * in which case we have to take immediate action.
+	 * @param first
+	 * @param lastMove
+	 * @param blocking where the blocking location is stored if function returns true
+	 * @return
+	 */
+	public boolean formedThreat(boolean first, int lastMove, int[] blocking) {
+		int rowIndex = lastMove / width;
+		int colIndex = lastMove % width;
+		int lrIdx = getltorDiagIndex(lastMove);
+		int rlIdx = getrtolDiagIndex(lastMove);
+		int rowRes = lineHasFour(rowBased[rowIndex], width, first);
+		if (rowRes >= 0) {
+			blocking[0] = rowIndex * width + rowRes;
+			return true;
+		}
+		
+		int colRes = lineHasFour(colBased[colIndex], height, first);
+		if (colRes >= 0) {
+			blocking[0] = colRes * width + colIndex;
+			return true;
+		}
+		
+		int lrRes = lineHasFour(ltorDiag[lrIdx], Math.min(lrIdx + 1, width + height - lrIdx - 1), first);
+		if (lrRes >= 0) {
+			blocking[0] = lrDiagToBoardPosition(lrIdx, lrRes);
+			return true;
+		}
+		
+		int rlRes = lineHasFour(rtolDiag[rlIdx], Math.min(rlIdx + 1, width + height - rlIdx - 1), first);
+		if (rlRes >= 0) {
+			blocking[0] = rlDiagToBoardPosition(rlIdx, rlRes);
+			return true;
+		}
+		
+		blocking[0] = -1;
+		return false;
+	}
+	
+	/**
+	 * Check if the last move made by opponent forms a three, in which case
+	 * we have to either block or use global refutation (i.e. form a four).
+	 * @param first
+	 * @param lastMove
+	 * @return
+	 */
+	public boolean formedThree(boolean first, int lastMove) {
+		char selfCh = first ? '3' : '2';
+		int rowIndex = lastMove / width;
+		int colIndex = lastMove % width;
+		int lrIdx = getltorDiagIndex(lastMove);
+		int rlIdx = getrtolDiagIndex(lastMove);
+		int idxOnLR = getIndexOnLtoR(lastMove);
+		int idxOnRL = getIndexOnRtoL(lastMove);
+		StringBuffer row = getBase4Str(rowBased[rowIndex], width);
+		if (formedThree(row, selfCh, colIndex))
+			return true;
+		
+		StringBuffer col = getBase4Str(colBased[colIndex], width);
+		if (formedThree(col, selfCh, rowIndex))
+			return true;
+		
+		StringBuffer lrDiag = getBase4Str(ltorDiag[lrIdx], Math.min(lrIdx + 1, width + height - 1 - lrIdx));
+		if (formedThree(lrDiag, selfCh, idxOnLR))
+			return true;
+		
+		StringBuffer rlDiag = getBase4Str(rtolDiag[rlIdx], Math.min(rlIdx + 1, width + height - 1 - rlIdx));
+		if (formedThree(rlDiag, selfCh, idxOnRL))
+			return true;
+		
+		return false;
+	}
+	
+	/**
+	 * Helper of the above function (with the same name).
+	 * @param line
+	 * @param selfCh
+	 * @param indexOnLine
+	 * @return
+	 */
+	private boolean formedThree(StringBuffer line, char selfCh, int indexOnLine) {
+		int idxStart = Math.max(0, indexOnLine - 4);
+		if (idxStart + 6 > line.length())
+			return false;
+		
+		int selfCnt = 0, empCnt = 0;
+		for (int i = idxStart; i < idxStart + 6; i++) {
+			char ch = line.charAt(i);
+			if (ch == selfCh) 
+				selfCnt ++;
+			else if (ch == '0')
+				empCnt ++;
+		}
+		
+		if (selfCnt == 3 && empCnt == 3 && line.charAt(idxStart) == '0' &&
+				line.charAt(idxStart + 5) == '0')
+			return true;
+		
+		int startCtr = idxStart, endCtr = idxStart + 6;
+		for (; endCtr < line.length(); startCtr++, endCtr++) {
+			char startCh = line.charAt(startCtr);
+			char endCh = line.charAt(endCtr);
+			if (startCh == selfCh)
+				selfCnt --;
+			else if (startCh == '0')
+				empCnt --;
+			
+			if (endCh == selfCh)
+				selfCh ++;
+			else if (endCh == '0')
+				empCnt ++;
+			
+			if (selfCnt == 3 && empCnt == 3 && line.charAt(startCtr + 1) == '0'
+					&& endCh == '0')
+				return true;
+		}
+		
+		return false;
 	}
 	
 	public Map<Integer, Integer> findThreatLocation(boolean first) {

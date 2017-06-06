@@ -132,6 +132,107 @@ public class BoardTree {
 		return bestMove;
 	}
 	
+	public static int alphaBetaCustom(UnrestrictedBoard bd, int depth, int alpha, 
+			int beta, boolean maximizing, int[] value, int lastMove, 
+			int evalOscillation, int selectionThreshold) {
+
+		if (depth == 0) {
+			nodesNum++;
+			value[0] = bd.evaluateBoardRng(evalOscillation);
+			return -1;
+		}
+		
+		if ((lastMove >= 0 && bd.checkWinningLite(lastMove, !maximizing)) || 
+				bd.someoneWins()) {
+			nodesNum++;
+			value[0] = bd.evaluateBoardRng(evalOscillation);
+			return -1;
+		}
+		
+		// Sort next moves based on increment of heuristic function in descending order
+		// (larger heuristic improvements will be checked earlier)
+		Set<Integer> nextMoves = bd.nextMoves();
+		if (nextMoves.isEmpty()) {
+			if (bd.boardFull()) {
+				value[0] = bd.evaluateBoard();
+				return -1;
+			} else {
+				return bd.getFirstRandomMove();
+			}
+		}
+		
+		List<Integer> nmsorted = new ArrayList<>();
+		Map<Integer, Integer> incMap = new HashMap<>();
+		for (int mv : nextMoves) {
+			int inc = bd.getInc(mv, maximizing);
+			if (inc >= selectionThreshold) {
+				nmsorted.add(mv);
+				incMap.put(mv, inc);
+			}
+		}
+		
+		nmsorted.sort(new Comparator<Integer>() {
+			@Override
+			public int compare(Integer o1, Integer o2) {
+				// TODO Auto-generated method stub
+				int v1 = incMap.get(o1);
+				int v2 = incMap.get(o2);
+				if (v1 == v2)
+					return 0;
+				return v1 > v2 ? -1 : 1;
+			}
+		});
+		
+		if (nmsorted.isEmpty())
+			nmsorted.addAll(nextMoves);
+		
+		Integer maxInc = incMap.get(nmsorted.get(0));
+		if (maxInc != null && maxInc >= AbstractBoard.winning_score / 2) {
+			value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
+			return nmsorted.get(0);
+		}
+		
+		int bestMove = -1;
+		if (maximizing) {
+			int maxVal = Integer.MIN_VALUE;
+			for (int move : nmsorted) {
+				bd.updateBoard(move, maximizing);
+				nodesNum++;
+				alphaBetaCustom(bd, depth-1, alpha, beta, !maximizing, value, move, 4, 4);
+				if (value[0] > maxVal) {
+					maxVal = value[0];
+					bestMove = move;
+				}
+				
+				bd.withdrawMove(move);
+				alpha = Math.max(alpha, maxVal);
+				if (beta <= alpha)
+					break;
+			}
+			
+			value[0] = maxVal;
+		} else {
+			int minVal = Integer.MAX_VALUE;
+			for (int move : nmsorted) {
+				bd.updateBoard(move, maximizing);
+				nodesNum++;
+				alphaBetaCustom(bd, depth-1, alpha, beta, !maximizing, value, move, 4, 4);
+				if (value[0] < minVal) {
+					minVal = value[0];
+					bestMove = move;
+				}
+				bd.withdrawMove(move);
+				beta = Math.min(beta, minVal);
+				if (beta <= alpha)
+					break;
+			}
+			
+			value[0] = minVal;
+		}
+		
+		return bestMove;
+	}
+	
 	/**
 	 * Threat-space search version 1; initial version only considers direct threats (4 stones).
 	 * @param bd
@@ -150,7 +251,6 @@ public class BoardTree {
 			return selfWinningLoc;
 		
 		Map<Integer, Integer> threatAndCounter = bd.findThreatLocation(first);
-//		System.out.println(threatAndCounter.size() + " threat locations found!");
 		
 		for (Entry<Integer, Integer> pair : threatAndCounter.entrySet()) {
 			bd.updateBoard(pair.getKey(), first);
@@ -163,5 +263,9 @@ public class BoardTree {
 		}
 		
 		return -100;
+	}
+	
+	public static List<Integer> genSortedNextMoves(UnrestrictedBoard bd, boolean first) {
+		return null;
 	}
 }
