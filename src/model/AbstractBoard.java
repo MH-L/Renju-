@@ -822,6 +822,138 @@ public abstract class AbstractBoard {
 	}
 	
 	/**
+	 * Find all blocking locations of three's of the given player.
+	 * These locations do not guarantee to be effective, but at least
+	 * it helps reduce branching factor.
+	 * Pre-condition: the player to check does not have any four's
+	 * @param first
+	 * @return
+	 */
+	public Set<Integer> findAllThrees(boolean first) {
+		Set<Integer> retVal = new HashSet<>();
+		for (int i = 0; i < rowBased.length; i++) {
+			Set<Integer> res = findThree(getBase4Str(rowBased[i], width), first);
+			for (int r : res) {
+				retVal.add(i * width + r);
+			}
+		}
+		
+		for (int i = 0; i < colBased.length; i++) {
+			Set<Integer> res = findThree(getBase4Str(colBased[i], height), first);
+			for (int r : res) {
+				retVal.add(r * width + i);
+			}
+		}
+		
+		for (int i = 0; i < ltorDiag.length; i++) {
+			Set<Integer> res = findThree(getBase4Str(ltorDiag[i], Math.min(i + 1, width + height - 1 - i)), first);
+			for (int r : res) {
+				retVal.add(lrDiagToBoardPosition(i, r));
+			}
+		}
+		
+		for (int i = 0; i < rtolDiag.length; i++) {
+			Set<Integer> res = findThree(getBase4Str(rtolDiag[i], Math.min(i + 1, width + height - 1 - i)), first);
+			for (int r : res) {
+				retVal.add(rlDiagToBoardPosition(i, r));
+			}
+		}
+		
+		return retVal;
+	}
+	
+	/**
+	 * Return the index into the line where threes can be blocked.
+	 * If no three is found, return empty list.
+	 * @param line
+	 * @param first
+	 * @return
+	 */
+	private Set<Integer> findThree(StringBuffer line, boolean first) {
+		Set<Integer> retVal = new HashSet<>();
+		if (line.length() <= 5)
+			return retVal;
+		
+		int selfCnt = 0, empCnt = 0;
+		char selfCh = first ? '3' : '2';
+		char oppCh = first ? '2' : '3';
+		char empty = '0';
+		Set<Integer> empLocSet = new HashSet<>();
+		for (int i = 0; i < 6; i++) {
+			char ch = line.charAt(i);
+			if (ch == selfCh)
+				selfCnt ++;
+			else if (ch == empty) {
+				empLocSet.add(i);
+				empCnt ++;
+			}
+		}
+		
+		if (selfCnt == 3 && empCnt == 3 && empLocSet.contains(0) && empLocSet.contains(5)) {
+			if (empLocSet.contains(1)) {
+				retVal.add(1);
+				retVal.add(5);
+			} else {
+				retVal.addAll(empLocSet);
+			}
+		}
+		
+		for (int i = 0, j = 6; j < line.length(); i++, j++) {
+			char front = line.charAt(j);
+			char back = line.charAt(i);
+			if (back == selfCh)
+				selfCnt --;
+			else if (back == empty) {
+				empCnt --;
+				empLocSet.remove(i);
+			}
+			
+			if (front == selfCh)
+				selfCnt ++;
+			else if (front == empty) {
+				empCnt ++;
+				empLocSet.add(i);
+			}
+			
+			// Two ends empty; meets criteria
+			if (empLocSet.contains(i + 1) && empLocSet.contains(j)) {
+				// First check the boundary
+				if (j == line.length() - 1) {
+					if (empLocSet.contains(j - 1)) {
+						retVal.add(i + 1);
+						retVal.add(j - 1);
+					} else retVal.addAll(empLocSet);
+				} else if (line.charAt(i) == oppCh) {
+					if (line.charAt(j + 1) == oppCh) {
+						// two sides blocked, add all;
+						retVal.addAll(empLocSet);
+					} else if (empLocSet.contains(i + 2)) {
+						retVal.add(i + 2);
+						retVal.add(j);
+					} else retVal.addAll(empLocSet);
+				} else if (line.charAt(j + 1) == oppCh) {
+					if (empLocSet.contains(j - 1)) {
+						retVal.add(j - 1);
+						retVal.add(i + 1);
+					} else {
+						retVal.addAll(empLocSet);
+					}
+				} else {
+					if (empLocSet.contains(i + 1)) {
+						retVal.add(i + 1);
+						retVal.add(j);
+					} else if (empLocSet.contains(j - 1)) {
+						retVal.add(j - 1);
+						retVal.add(i);
+					} else retVal.addAll(empLocSet);
+				}
+			}
+		}
+		
+		return retVal;
+	}
+	
+	/**
 	 * Check if the last move made by opponent forms a three, in which case
 	 * we have to either block or use global refutation (i.e. form a four).
 	 * @param first

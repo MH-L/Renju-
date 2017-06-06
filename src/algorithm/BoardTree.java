@@ -282,6 +282,16 @@ public class BoardTree {
 		return -100;
 	}
 	
+	/**
+	 * Shortest-path threat space searcher: generates the winning threat sequence
+	 * (if there are any) with the smallest number of rounds.
+	 * @param bd
+	 * @param depth
+	 * @param first
+	 * @param blocking
+	 * @param pathLen stores the length of the shortest threat sequence
+	 * @return
+	 */
 	public static int threatSpaceSearchV2(UnrestrictedBoard bd, int depth, boolean first, 
 			int[] blocking, int[] pathLen) {
 		if (depth <= 0)
