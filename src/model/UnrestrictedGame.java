@@ -132,9 +132,9 @@ public class UnrestrictedGame extends AbstractGame {
 	}
 	
 	@Override
-	public boolean exitCheck() {
+	public int exitCheck() {
 		if (!playerDropped)
-			return true;
+			return 1;
 		
 		int confirmValue = JOptionPane.showConfirmDialog(mainFrame,
 	            "Are you sure you want to exit the current game? The current game"
@@ -148,9 +148,9 @@ public class UnrestrictedGame extends AbstractGame {
 				e.printStackTrace();
 			}
 			
-			return true;
+			return 2;
 		}
 		
-		return false;
+		return 0;
 	}
 }

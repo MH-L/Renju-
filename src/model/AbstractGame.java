@@ -170,7 +170,7 @@ public abstract class AbstractGame {
 		newGame.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				if (exitCheck())
+				if (exitCheck() != 0)
 					gameStart();
 			}
 		});
@@ -189,7 +189,7 @@ public abstract class AbstractGame {
 		exit.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (exitCheck()) {
+				if (exitCheck() != 0) {
 					mainFrame.dispose();
 					Main.displayWelcomeFrame();
 				}
@@ -321,11 +321,12 @@ public abstract class AbstractGame {
 		frame.addWindowListener(new java.awt.event.WindowAdapter() {
 		    @Override
 		    public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-		    	if (exitCheck()) {
+		    	int exitVal = exitCheck();
+		    	if (exitVal == 2) {
 		    		System.exit(0);
 		    	}
 		    	
-		        if (JOptionPane.showConfirmDialog(frame,
+		    	if (exitVal == 1 && JOptionPane.showConfirmDialog(frame,
 		            "Are you sure to close this window?", "Confirm Closing",
 		            JOptionPane.YES_NO_OPTION,
 		            JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
@@ -350,8 +351,8 @@ public abstract class AbstractGame {
 	
 	public abstract void afterGameCleanup(int result);
 	
-	public boolean exitCheck() {
-		return true;
+	public int exitCheck() {
+		return 1;
 	}
 	
 	public void playerPlayed() {}

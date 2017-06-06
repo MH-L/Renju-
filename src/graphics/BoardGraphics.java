@@ -82,7 +82,12 @@ public class BoardGraphics extends JPanel {
 								reset();
 								return;
 							}
-							game.comMove();
+							new Thread(new Runnable() {
+								@Override
+								public void run() {
+									game.comMove();
+								}
+							}).start();
 						} else {
 							game.displayOccupiedWarning();
 						}
@@ -94,7 +99,7 @@ public class BoardGraphics extends JPanel {
 		}
 	}
 	
-	public void updateComMove(int move, boolean first) {
+	public int updateComMove(int move, boolean first) {
 		bd.updateBoard(move, first);
 		int rowIdx = move / width;
 		int colIdx = move % width;
@@ -103,11 +108,15 @@ public class BoardGraphics extends JPanel {
 			game.displayWinnerInfo(false);
 			game.afterGameCleanup(1);
 			reset();
+			return 1;
 		} else if (bd.boardFull()) {
 			game.displayTieMessageBoardFull();
 			game.afterGameCleanup(2);
 			reset();
+			return 2;
 		}
+		
+		return 0;
 	}
 	
 	public void reset() {

@@ -36,20 +36,25 @@ public class UnrestrictedCvCGame extends AbstractGame {
 	@Override
 	public void gameStart() {
 		super.gameStart();
-		runCvCGame();
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				runCvCGame();
+			}
+		}).start();
 	}
 	
 	public void runCvCGame() {
-		UnrestrictedBoard bd = (UnrestrictedBoard) bg.getBoard();
 		while (true) {
+			int moveResult = 0;
 			if (activePlayer) {
 				int comMove = com1.makeMove();
+				moveResult = bg.updateComMove(comMove, true);
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-				bg.updateComMove(comMove, true);
 			} else {
 				int comMove = com2.makeMove();
 				try {
@@ -57,16 +62,12 @@ public class UnrestrictedCvCGame extends AbstractGame {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-				bg.updateComMove(comMove, false);
+				moveResult = bg.updateComMove(comMove, false);
 			}
 			
-			if (bd.someoneWins()) {
-				System.out.println("Someone Wins!");
+			if (moveResult != 0)
 				break;
-			} else if (bd.boardFull()) {
-				System.out.println("Board Full");
-				break;
-			}
+			
 			updateTurnStatus();
 		}
 	}

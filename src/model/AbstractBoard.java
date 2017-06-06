@@ -155,9 +155,19 @@ public abstract class AbstractBoard {
 	}
 	
 	public int evaluateBoard() {
-		// TODO 1. random perturbation 2. return whether or not has 4
-//		int randomPurt = rng.nextInt(7) - 3;
 		return evaluateBoardPV(true) - evaluateBoardPV(false);
+	}
+	
+	/**
+	 * Add some random perturbation to board evalulation function
+	 * so that the moves will have some randomness.
+	 * @param oscillation
+	 * @return
+	 */
+	public int evaluateBoardRng(int oscillation) {
+		int randomPurt = rng.nextInt(oscillation * 2 + 1);
+		randomPurt -= oscillation;
+		return evaluateBoardPV(true) - evaluateBoardPV(false) + randomPurt;
 	}
 	
 	public int evaluateBoardPV(boolean first) {
@@ -837,6 +847,6 @@ public abstract class AbstractBoard {
 	public int getFirstRandomMove() {
 		int randomX = new Random().nextInt(3);
 		int randomY = new Random().nextInt(3);
-		return (6 + randomY) * width + (6 + randomY);
+		return (6 + randomY) * width + (6 + randomX);
 	}
 }
