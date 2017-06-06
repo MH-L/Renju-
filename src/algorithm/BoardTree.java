@@ -28,10 +28,10 @@ public class BoardTree {
 	 */
 	public static int alphaBeta(UnrestrictedBoard bd, int depth, int alpha, 
 			int beta, boolean maximizing, int[] value) {
-		return alphaBetaHelper(bd, depth, alpha, beta, maximizing, value, -1);
+		return alphaBetaMem(bd, depth, alpha, beta, maximizing, value, -1);
 	}
 	
-	private static int alphaBetaHelper(UnrestrictedBoard bd, int depth, int alpha, 
+	public static int alphaBetaMem(UnrestrictedBoard bd, int depth, int alpha, 
 			int beta, boolean maximizing, int[] value, int lastMove) {
 		if (depth == 0) {
 			nodesNum++;
@@ -97,7 +97,7 @@ public class BoardTree {
 			for (int move : nmsorted) {
 				bd.updateBoard(move, maximizing);
 				nodesNum++;
-				alphaBetaHelper(bd, depth-1, alpha, beta, !maximizing, value, move);
+				alphaBetaMem(bd, depth-1, alpha, beta, !maximizing, value, move);
 				if (value[0] > maxVal) {
 					maxVal = value[0];
 					bestMove = move;
@@ -115,7 +115,7 @@ public class BoardTree {
 			for (int move : nmsorted) {
 				bd.updateBoard(move, maximizing);
 				nodesNum++;
-				alphaBetaHelper(bd, depth-1, alpha, beta, !maximizing, value, move);
+				alphaBetaMem(bd, depth-1, alpha, beta, !maximizing, value, move);
 				if (value[0] < minVal) {
 					minVal = value[0];
 					bestMove = move;

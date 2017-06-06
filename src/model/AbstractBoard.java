@@ -49,9 +49,11 @@ public abstract class AbstractBoard {
 	protected Random rng;
 	public static List<Map<Integer, Integer>> evalMapsBlack;
 	public static List<Map<Integer, Integer>> evalMapsWhite;
+	private List<Integer> moveSequence;
 	
 	public AbstractBoard() {
 		rng = new Random();
+		moveSequence = new ArrayList<>();
 		rowBased = new int[height];
 		colBased = new int[width];
 		ltorDiag = new int[width + height - 1];
@@ -878,7 +880,7 @@ public abstract class AbstractBoard {
 			return true;
 		
 		int startCtr = idxStart, endCtr = idxStart + 6;
-		for (; endCtr < line.length(); startCtr++, endCtr++) {
+		for (; endCtr < Math.min(indexOnLine + 5, line.length()); startCtr++, endCtr++) {
 			char startCh = line.charAt(startCtr);
 			char endCh = line.charAt(endCtr);
 			if (startCh == selfCh)
@@ -963,6 +965,14 @@ public abstract class AbstractBoard {
 	}
 	
 	public abstract boolean someoneWins();
+	
+	public void addMoveToSequence(int move) {
+		moveSequence.add(move);
+	}
+	
+	public int getMostRecentMove() {
+		return moveSequence.isEmpty() ? -1 : moveSequence.get(moveSequence.size() - 1);
+	}
 	
 	public boolean boardFull() {
 		for (int row : rowBased) {

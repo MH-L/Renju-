@@ -64,13 +64,15 @@ public class BoardGraphics extends JPanel {
 						
 						if (square.isUnoccupied()) {
 							game.playerPlayed();
+							int playerMove = square.y * width + square.x;
 							if (game.isBlackActive()) {
 								square.setStone(true);
-								bd.updateBoard(square.y * width + square.x, true);
+								bd.updateBoard(playerMove, true);
 							} else {
 								square.setStone(false);
-								bd.updateBoard(square.y * width + square.x, false);
+								bd.updateBoard(playerMove, false);
 							}
+							bd.addMoveToSequence(playerMove);
 							if (bd.someoneWins()) {
 								game.displayWinnerInfo(true);
 								game.afterGameCleanup(0);
@@ -104,6 +106,7 @@ public class BoardGraphics extends JPanel {
 		int rowIdx = move / width;
 		int colIdx = move % width;
 		grid[rowIdx][colIdx].setStone(first);
+		bd.addMoveToSequence(move);
 		if (bd.someoneWins()) {
 			game.displayWinnerInfo(false);
 			game.afterGameCleanup(1);
