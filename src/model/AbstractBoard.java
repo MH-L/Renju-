@@ -684,6 +684,7 @@ public abstract class AbstractBoard {
 	/**
 	 * Return the square to win if first can win in one move if he plays next;
 	 * if the first doesn't have a direct threat, return a negative number.
+	 * Notice that the return value is also the blocking square of the opponent.
 	 * @param first - black to move or white
 	 * @return
 	 */

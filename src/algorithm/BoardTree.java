@@ -46,6 +46,15 @@ public class BoardTree {
 			return -1;
 		}
 		
+		int[] blocking = new int[]{0};
+		if (bd.formedThreat(!maximizing, lastMove, blocking)) {
+			int onlyMove = blocking[0];
+			bd.updateBoard(onlyMove, maximizing);
+			alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, onlyMove);
+			bd.withdrawMove(onlyMove);
+			return onlyMove;
+		}
+		
 		// Sort next moves based on increment of heuristic function in descending order
 		// (larger heuristic improvements will be checked earlier)
 		Set<Integer> nextMoves = bd.nextMoves();
@@ -240,22 +249,25 @@ public class BoardTree {
 	 * @param first
 	 * @return
 	 */
-	public static int threatSpaceSearch(UnrestrictedBoard bd, int depth, boolean first) {
+	public static int threatSpaceSearch(UnrestrictedBoard bd, int depth, boolean first, int[] blocking) {
 		if (depth <= 0)
-			return -100;
-		if (bd.canWinNextMove(!first) >= 0)
 			return -100;
 		
 		int selfWinningLoc = bd.canWinNextMove(first);
 		if (selfWinningLoc >= 0)
 			return selfWinningLoc;
+		int blockingLoc = bd.canWinNextMove(!first);
+		if (blockingLoc >= 0) {
+			blocking[0] = blockingLoc;
+			return -200;
+		}
 		
 		Map<Integer, Integer> threatAndCounter = bd.findThreatLocation(first);
 		
 		for (Entry<Integer, Integer> pair : threatAndCounter.entrySet()) {
 			bd.updateBoard(pair.getKey(), first);
 			bd.updateBoard(pair.getValue(), !first);
-			int childResult = threatSpaceSearch(bd, depth - 1, first);
+			int childResult = threatSpaceSearch(bd, depth - 1, first, blocking);
 			bd.withdrawMove(pair.getKey());
 			bd.withdrawMove(pair.getValue());
 			if (childResult >= 0)

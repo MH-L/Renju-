@@ -104,7 +104,7 @@ public class TSSTest {
 		bd.updateBoard(154, false);
 		bd.updateBoard(157, false);
 		bd.render();
-		System.out.println(BoardTree.threatSpaceSearch(bd, 4, true));
+		System.out.println(BoardTree.threatSpaceSearch(bd, 4, true, new int[]{0}));
 	}
 	
 	@Test
@@ -117,7 +117,7 @@ public class TSSTest {
 		updateBoardInBatch(bd, ycoord, xcoord, false);
 		bd.render();
 		Map<Integer, Integer> thLocations = bd.findThreatLocation(false);
-		System.out.println(BoardTree.threatSpaceSearch(bd, 20, false));
+		System.out.println(BoardTree.threatSpaceSearch(bd, 20, false, new int[]{0}));
 	}
 	
 	private void updateBoardInBatch(AbstractBoard bd, List<Integer> ycoord, 
