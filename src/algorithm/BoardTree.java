@@ -3,6 +3,7 @@ package algorithm;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -46,12 +47,18 @@ public class BoardTree {
 			return -1;
 		}
 		
+		int winningMove = bd.canWinNextMove(maximizing);
+		if (winningMove >= 0) {
+			value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
+			return winningMove;
+		}
+		
 		// TODO prune next move if the opponent has threats of fours and threes
 		// Note that the former is easy, as implemented below; but the latter is
 		// hard since we may use global refutation so that threats are to be 
 		// dealt with in later moves.
 		int[] blocking = new int[]{0};
-		if (bd.formedThreat(!maximizing, lastMove, blocking)) {
+		if (lastMove >= 0 && bd.formedThreat(!maximizing, lastMove, blocking)) {
 			int onlyMove = blocking[0];
 			bd.updateBoard(onlyMove, maximizing);
 			alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, onlyMove);
@@ -59,9 +66,19 @@ public class BoardTree {
 			return onlyMove;
 		}
 		
+		Set<Integer> nextMoves = new HashSet<>();
+		Set<Integer> allThrees = bd.findAllThrees(!maximizing);
+		if (!allThrees.isEmpty()) {
+			Map<Integer, Integer> thLocations = bd.findThreatLocation(maximizing);
+			nextMoves = allThrees;
+			nextMoves.addAll(thLocations.keySet());
+		} else {
+			nextMoves = bd.nextMoves();
+		}
+		
 		// Sort next moves based on increment of heuristic function in descending order
 		// (larger heuristic improvements will be checked earlier)
-		Set<Integer> nextMoves = bd.nextMoves();
+		
 		if (nextMoves.isEmpty()) {
 			if (bd.boardFull()) {
 				value[0] = bd.evaluateBoard();

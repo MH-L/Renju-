@@ -109,6 +109,19 @@ public class BoardTreeTest {
 		bd.render();
 		System.out.println(BoardTree.alphaBeta(bd, 6, Integer.MIN_VALUE, Integer.MAX_VALUE, 
 				false, new int[]{0}));
+		
+		bd.reset();
+		xcoord = Arrays.asList(7,8,7,6,7,8);
+		ycoord = Arrays.asList(5,6,7,8,9,9);
+		updateBoardInBatch(bd, ycoord, xcoord, true);
+		xcoord = Arrays.asList(6,9,6,7,6,5);
+		ycoord = Arrays.asList(4,5,6,6,7,8);
+		updateBoardInBatch(bd, ycoord, xcoord, false);
+		bd.withdrawMove(125);
+		bd.render();
+		System.out.println(BoardTree.threatSpaceSearchV2(bd, 30, false, new int[]{0}, new int[]{0}));
+		System.out.println(BoardTree.alphaBeta(bd, 8, Integer.MIN_VALUE, Integer.MAX_VALUE, 
+				false, new int[]{0}));
 	}
 	
 	@Test

@@ -1107,6 +1107,10 @@ public abstract class AbstractBoard {
 		return moveSequence.isEmpty() ? -1 : moveSequence.get(moveSequence.size() - 1);
 	}
 	
+	public int getStoneCount() {
+		return moveSequence.size();
+	}
+	
 	public boolean boardFull() {
 		for (int row : rowBased) {
 			if ((row & 715827882) != 715827882)

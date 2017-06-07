@@ -100,4 +100,17 @@ public class UnrestrictedBoardTest {
 		bd.withdrawMove(16);
 		bd.render();
 	}
+	
+	@Test
+	public void testFormedThreat() {
+		int blocking[] = new int[]{0};
+		bd.updateBoard(12, true);
+		bd.updateBoard(26, true);
+		assertFalse(bd.formedThreat(true, 26, blocking));
+		bd.updateBoard(40, true);
+		bd.updateBoard(54, true);
+		assertTrue(bd.formedThreat(true, 54, blocking));
+		assertEquals(blocking[0], 68);
+		bd.render();
+	}
 }

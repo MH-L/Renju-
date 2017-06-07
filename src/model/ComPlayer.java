@@ -53,7 +53,7 @@ public class ComPlayer extends AbstractPlayer {
 			if (threatSearch >= 0) {
 				System.out.println("Threat space searcher found sequence: " + threatSearch);
 				return threatSearch;
-			} else if (threatSearch >= -200) {
+			} else if (threatSearch == -200) {
 				// Direct threat detected by threat space searcher.
 				return blocking[0];
 			}
