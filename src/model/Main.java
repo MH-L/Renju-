@@ -19,8 +19,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
@@ -37,6 +35,7 @@ public class Main {
 	
 	public static void main(String args[]) throws IOException {
 		LocalStorage.initializeLocalStorage();
+		LocalStorage.writeInitialSeed();
 		UIManager.put("OptionPane.messageFont", AbstractGame.smallGameFont);
 		UIManager.put("OptionPane.buttonFont", AbstractGame.smallGameFont);
 		setUIFont(new FontUIResource(new Font("Calibri", Font.PLAIN, 16)));

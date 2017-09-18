@@ -94,7 +94,7 @@ public class BoardTree {
 			int inc = bd.getInc(mv, maximizing);
 			// TODO best-looking moves are checked (Allis, 1994)
 			// TODO inc function might be buggy
-			if (inc > 3) {
+			if (inc > -1) {
 				nmsorted.add(mv);
 				incMap.put(mv, inc);
 			}
