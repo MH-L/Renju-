@@ -73,7 +73,7 @@ public abstract class AbstractGame {
 	protected Random rng;
 	
 	public enum Difficulty {
-		novice, intermediate, advanced, ultimate;
+		novice, intermediate, advanced, ultimate, custom;
 	}
 	
 	public enum Result {

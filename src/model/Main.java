@@ -10,17 +10,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.Random;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.UIManager;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.FontUIResource;
@@ -106,11 +96,13 @@ public class Main {
 		JButton networkBtn = getPlainLookbtn("Network", "Open Sans", 28, Font.PLAIN, Color.RED);
 		JButton aiGameBtn = getPlainLookbtn("AI Game", "Open Sans", 28, Font.PLAIN, Color.GRAY);
 		JButton optionsBtn = getPlainLookbtn("Options", "Open Sans", 28, Font.PLAIN, Color.WHITE);
+		JButton experimentalBtn = getPlainLookbtn("Experiments", "Open Sans", 28, Font.PLAIN, Color.PINK);
 		btnPanel.add(singleplayerBtn);
 		btnPanel.add(multiplayerBtn);
 		btnPanel.add(networkBtn);
 		btnPanel.add(aiGameBtn);
 		btnPanel.add(optionsBtn);
+		btnPanel.add(experimentalBtn);
 
 		singleplayerBtn.addActionListener(new ActionListener() {
 			@Override
@@ -146,6 +138,16 @@ public class Main {
 				displayUnimplementedMessage();
 			}
 		});
+
+		experimentalBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                UnrestrictedCvCGame experiment = new UnrestrictedCvCGame(new UnrestrictedBoard(),
+                        Difficulty.custom, Difficulty.custom);
+                experiment.setCustomAIParams(3, 3);
+                experiment.runCvCGameForRecord(1000);
+            }
+        });
 	}
 
 	protected static JButton getPlainLookbtn(String displayText, String font, int fontSize, int fontStyle,

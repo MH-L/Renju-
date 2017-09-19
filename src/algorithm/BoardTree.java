@@ -15,6 +15,7 @@ import model.UnrestrictedBoard;
 
 public class BoardTree {
 	public static int nodesNum = 0;
+	private static final int MAX_BIAS = 1000;
 	/**
 	 * Do alpha-beta pruning, returning the best move under given depth.
 	 * 
@@ -228,7 +229,7 @@ public class BoardTree {
 			for (int move : nmsorted) {
 				bd.updateBoard(move, maximizing);
 				nodesNum++;
-				alphaBetaCustom(bd, depth-1, alpha, beta, !maximizing, value, move, 4, 4);
+				alphaBetaCustom(bd, depth-1, alpha, beta, !maximizing, value, move, evalOscillation, selectionThreshold);
 				if (value[0] > maxVal) {
 					maxVal = value[0];
 					bestMove = move;
@@ -246,7 +247,7 @@ public class BoardTree {
 			for (int move : nmsorted) {
 				bd.updateBoard(move, maximizing);
 				nodesNum++;
-				alphaBetaCustom(bd, depth-1, alpha, beta, !maximizing, value, move, 4, 4);
+				alphaBetaCustom(bd, depth-1, alpha, beta, !maximizing, value, move, evalOscillation, selectionThreshold);
 				if (value[0] < minVal) {
 					minVal = value[0];
 					bestMove = move;
@@ -352,5 +353,16 @@ public class BoardTree {
 	
 	public static List<Integer> genSortedNextMoves(UnrestrictedBoard bd, boolean first) {
 		return null;
+	}
+
+	/**
+	 * A smart function to get bias based on history
+	 * @param winProbability the probability of winning
+	 * @param loseProbability the probability of losing
+	 * @param support total number of events happened
+	 * @return the bias
+	 */
+	private static int getBiasFromHistory(double winProbability, double loseProbability, int support) {
+		return (int) (Math.pow(winProbability - loseProbability, 1/3) * (1 - Math.exp(-support)) * MAX_BIAS);
 	}
 }

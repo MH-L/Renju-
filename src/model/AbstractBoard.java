@@ -1,5 +1,7 @@
 package model;
 
+import storage.LocalStorage;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -128,6 +130,8 @@ public abstract class AbstractBoard {
 		for (int i = 0; i < rtolDiag.length; i++) {
 			rtolDiag[i] = 0;
 		}
+
+		moveSequence.clear();
 	}
 	
 	public void render() {
@@ -1125,4 +1129,12 @@ public abstract class AbstractBoard {
 		int randomY = new Random().nextInt(3);
 		return (6 + randomY) * width + (6 + randomX);
 	}
+
+	public void writeRecords(int gameResult) {
+        try {
+            LocalStorage.updateGameRecord(moveSequence, gameResult);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

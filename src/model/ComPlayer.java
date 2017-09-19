@@ -7,13 +7,20 @@ public class ComPlayer extends AbstractPlayer {
 	private UnrestrictedBoard gameBoard;
 	private boolean isComFirst;
 	private Difficulty diff;
-	
+	int oscillation = 0;
+	int selectionThreshold = -1;
+
 	ComPlayer(UnrestrictedBoard bd, boolean isComFirst, Difficulty diff) {
 		gameBoard = bd;
 		this.isComFirst = isComFirst;
 		this.diff = diff;
 	}
-	
+
+	public void setCustomParams(int oscillation, int selectionThreshold) {
+	    this.oscillation = oscillation;
+	    this.selectionThreshold = selectionThreshold;
+    }
+
 	@Override
 	public int makeMove() {
 		int lastMove = gameBoard.getMostRecentMove();
@@ -24,14 +31,14 @@ public class ComPlayer extends AbstractPlayer {
 			int threatSearch = BoardTree.threatSpaceSearch(gameBoard, 1, isComFirst, blocking);
 			if (threatSearch == -200)
 				return blocking[0];
-			return BoardTree.alphaBetaMem(gameBoard, 3, Integer.MIN_VALUE, 
+			return BoardTree.alphaBetaMem(gameBoard, 3, Integer.MIN_VALUE,
 					Integer.MAX_VALUE, isComFirst, new int[]{0}, lastMove);
 		case intermediate:
 			blocking = new int[]{0};
 			threatSearch = BoardTree.threatSpaceSearch(gameBoard, 1, isComFirst, blocking);
 			if (threatSearch == -200)
 				return blocking[0];
-			return BoardTree.alphaBetaMem(gameBoard, 5, Integer.MIN_VALUE, 
+			return BoardTree.alphaBetaMem(gameBoard, 5, Integer.MIN_VALUE,
 					Integer.MAX_VALUE, isComFirst, new int[]{0}, lastMove);
 		case advanced:
 			blocking = new int[]{0};
@@ -44,8 +51,8 @@ public class ComPlayer extends AbstractPlayer {
 				// If this falls down to alpha beta searcher then it's disaster.
 				return blocking[0];
 			}
-			
-			return BoardTree.alphaBetaMem(gameBoard, 7, Integer.MIN_VALUE, 
+
+			return BoardTree.alphaBetaMem(gameBoard, 7, Integer.MIN_VALUE,
 					Integer.MAX_VALUE, isComFirst, new int[]{0}, lastMove);
 		case ultimate:
 			blocking = new int[]{0};
@@ -57,9 +64,22 @@ public class ComPlayer extends AbstractPlayer {
 				// Direct threat detected by threat space searcher.
 				return blocking[0];
 			}
-			
-			return BoardTree.alphaBetaMem(gameBoard, 8, Integer.MIN_VALUE, 
+
+			return BoardTree.alphaBetaMem(gameBoard, 8, Integer.MIN_VALUE,
 					Integer.MAX_VALUE, isComFirst, new int[]{0}, lastMove);
+        case custom:
+            blocking = new int[]{0};
+            threatSearch = BoardTree.threatSpaceSearchV2(gameBoard, 30, isComFirst, blocking, new int[]{0});
+            if (threatSearch >= 0) {
+                System.out.println("Threat space searcher found sequence: " + threatSearch);
+                return threatSearch;
+            } else if (threatSearch == -200) {
+                // Direct threat detected by threat space searcher.
+                return blocking[0];
+            }
+
+            return BoardTree.alphaBetaCustom(gameBoard, 8, Integer.MIN_VALUE,
+                    Integer.MAX_VALUE, isComFirst, new int[]{0}, lastMove, oscillation, selectionThreshold);
 		default:
 			blocking = new int[]{0};
 			threatSearch = BoardTree.threatSpaceSearchV2(gameBoard, 25, isComFirst, blocking, new int[]{0});
@@ -69,12 +89,12 @@ public class ComPlayer extends AbstractPlayer {
 			} else if (threatSearch == -200) {
 				return blocking[0];
 			}
-			
-			return BoardTree.alphaBetaMem(gameBoard, 7, Integer.MIN_VALUE, 
-					Integer.MAX_VALUE, isComFirst, new int[]{0}, lastMove);
+
+			return BoardTree.alphaBetaCustom(gameBoard, 7, Integer.MIN_VALUE,
+					Integer.MAX_VALUE, isComFirst, new int[]{0}, lastMove, oscillation, selectionThreshold);
 		}
 	}
-	
+
 	public Difficulty getDiff() {
 		return diff;
 	}

@@ -84,6 +84,7 @@ public class LocalStorage {
 		}
 
 		pr.print(":" + result);
+		pr.println();
 		pr.close();
 	}
 
