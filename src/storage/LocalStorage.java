@@ -75,7 +75,7 @@ public class LocalStorage {
 		}
 		String recordDirPath = getGameStorageBaseDir() + RECORD_SUBDIR;
 		File recordDirFile = new File(recordDirPath);
-		// Find a file that is not too big; if no file found, create one
+		// TODO Find a file that is not too big; if no file found, create one
 		File[] recordList = recordDirFile.listFiles();
 		PrintWriter pr = new PrintWriter(new FileWriter(recordDirPath + "record001.txt", true));
 		pr.print(gameMoves.get(0));
@@ -199,4 +199,41 @@ public class LocalStorage {
 		br.close();
 		return ret;
 	}
+
+	public static List<List<Integer>> getAllPreviousGames(List<Integer> resultList) {
+	    List<List<Integer>> returnVal = new ArrayList<>();
+        String recordDirPath = getGameStorageBaseDir() + RECORD_SUBDIR;
+        File recordDirFile = new File(recordDirPath);
+        // Find a file that is not too big; if no file found, create one
+        File[] recordList = recordDirFile.listFiles();
+        for (File recFile : recordList) {
+            try (BufferedReader br = new BufferedReader(new FileReader(recFile))) {
+                String line = "";
+                while ((line = br.readLine()) != null) {
+                    if (!line.trim().isEmpty()) {
+                        int[] resultArr = new int[]{0};
+                        returnVal.add(lineToGame(line, resultArr));
+                        resultList.add(resultArr[0]);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return returnVal;
+    }
+
+	private static List<Integer> lineToGame(String line, int[] result) {
+	    // TODO potential inefficient method
+	    String[] parts = line.split(":");
+	    result[0] = Integer.parseInt(parts[1].trim());
+	    String[] moves = parts[0].split("\\|");
+	    List<Integer> returnVal = new ArrayList<>();
+	    for (int i = 0; i < moves.length; i++) {
+	        returnVal.add(Integer.parseInt(moves[i]));
+        }
+
+        return returnVal;
+    }
 }

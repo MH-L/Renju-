@@ -1,5 +1,6 @@
 package model;
 
+import algorithm.Zobrist;
 import storage.LocalStorage;
 
 import java.io.IOException;
@@ -45,6 +46,7 @@ public abstract class AbstractBoard {
 	protected int[] ltorDiag;
 	protected int[] rtolDiag;
 	protected int lastMove = invalid_location;
+	protected long zobristHash = 0;
 	
 	protected Map<Integer, List<Integer>> adjacentMap;
 	protected Map<Integer, List<Integer>> adjacentMapRed;
@@ -110,7 +112,8 @@ public abstract class AbstractBoard {
 
 		origRtoLDiag = origRtoLDiag ^ (stone << indexOnRtoLDiag * 2);
 		rtolDiag[rtolIndex] = origRtoLDiag;
-		
+
+		zobristHash = Zobrist.zobristHash(location, first, zobristHash);
 		return true;
 	}
 	
@@ -131,6 +134,8 @@ public abstract class AbstractBoard {
 			rtolDiag[i] = 0;
 		}
 
+		// Reset hash and clear move sequences.
+		zobristHash = 0;
 		moveSequence.clear();
 	}
 	

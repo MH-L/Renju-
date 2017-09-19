@@ -62,6 +62,7 @@ public class UnrestrictedCvCGame extends AbstractGame {
 	}
 	
 	public void runCvCGame() {
+	    activePlayer = true;
 		while (true) {
 			int moveResult = 0;
 			if (activePlayer) {

@@ -16,6 +16,7 @@ import model.UnrestrictedBoard;
 public class BoardTree {
 	public static int nodesNum = 0;
 	private static final int MAX_BIAS = 1000;
+	public static Map<Long, StatObj> statMap = new HashMap<>();
 	/**
 	 * Do alpha-beta pruning, returning the best move under given depth.
 	 * 
@@ -354,6 +355,20 @@ public class BoardTree {
 	public static List<Integer> genSortedNextMoves(UnrestrictedBoard bd, boolean first) {
 		return null;
 	}
+
+    /**
+     * Get evaluation bias in terms of black.
+     * @param boardHash
+     * @return
+     */
+    public static int getBias(long boardHash) {
+	    if (!statMap.containsKey(boardHash)) {
+	        // We have no data (which is true for most board positions)
+            return 0;
+        }
+        StatObj obj = statMap.get(boardHash);
+	    return getBiasFromHistory(obj.getWinRate(), obj.getLossRate(), obj.getSupport());
+    }
 
 	/**
 	 * A smart function to get bias based on history

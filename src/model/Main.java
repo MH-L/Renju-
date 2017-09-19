@@ -8,6 +8,8 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import javax.swing.*;
@@ -15,6 +17,8 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.FontUIResource;
 
+import algorithm.BoardTree;
+import algorithm.Zobrist;
 import model.AbstractGame.Difficulty;
 import storage.LocalStorage;
 
@@ -142,6 +146,9 @@ public class Main {
 		experimentalBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                List<Integer> resultList = new ArrayList<>();
+                List<List<Integer>> historicalGames = LocalStorage.getAllPreviousGames(resultList);
+                BoardTree.statMap = Zobrist.getStatMap(historicalGames, resultList);
                 UnrestrictedCvCGame experiment = new UnrestrictedCvCGame(new UnrestrictedBoard(),
                         Difficulty.custom, Difficulty.custom);
                 experiment.setCustomAIParams(3, 3);
