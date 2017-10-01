@@ -37,14 +37,37 @@ public abstract class AbstractBoard {
 	protected static final int small_jump_two = 2;
 	protected static final int big_jump_two = 1;
 	
-	protected static final int has_three = 3;
-	protected static final int has_four = 4;
-	protected static final int has_none = 0;
-	
 	protected int[] rowBased;
+	protected int[] rowBasedEval;
 	protected int[] colBased;
+	protected int[] colBasedEval;
 	protected int[] ltorDiag;
+	protected int[] ltorDiagEval;
 	protected int[] rtolDiag;
+	protected int[] rtolDiagEval;
+
+	// Stores the heuristic in terms of black by summing up all lines
+	private int curHeuristic = 0;
+
+	// Stores number of threes and fours currently on board for white
+	private int totWhiteThree = 0;
+	private int totWhiteFour = 0;
+
+	// Stores number of threes and fours currently on board for black
+	private int totBlackThree = 0;
+	private int totBlackFour = 0;
+
+	// stores number of white threes in each line
+	private int[] whiteThree;
+
+	// stores number of white fours in each line
+	private int[] whiteFour;
+
+	// stores number of black threes in each line
+	private int[] blackThree;
+
+	// stores number of black fours in each line
+	private int[] blackFour;
 	protected int lastMove = invalid_location;
 	protected long zobristHash = 0;
 	
@@ -62,6 +85,14 @@ public abstract class AbstractBoard {
 		colBased = new int[width];
 		ltorDiag = new int[width + height - 1];
 		rtolDiag = new int[width + height - 1];
+		rowBasedEval = new int[height];
+		colBasedEval = new int[width];
+		ltorDiagEval = new int[width + height - 1];
+		rtolDiagEval = new int[width + height - 1];
+		whiteThree = new int[2*width + 2*height - 2];
+        whiteFour = new int[2*width + 2*height - 2];
+        blackThree = new int[2*width + 2*height - 2];
+        blackFour = new int[2*width + 2*height - 2];
 		adjacentMap = new HashMap<>();
 		adjacentMapRed = new HashMap<>();
 		evalMapsBlack = new ArrayList<>(width + 1);
@@ -185,116 +216,99 @@ public abstract class AbstractBoard {
 		randomPurt -= oscillation;
 		return evaluateBoardPV(true) - evaluateBoardPV(false) + randomPurt;
 	}
+
+    /**
+     * Update board heuristics and line heuristics; called after update board or withdraw move.
+     * @param move the most recent move (either to update or withdraw)
+     * @param isFirst whether or not black made this move (or withdraw)
+     * @param isUpdate set to true if this is an update, false if withdraw
+     */
+	private void updateHeuristics(int move, boolean isFirst, boolean isUpdate) {
+	    // TODO things to consider: what if after withdrawal the composite pattern is gone?
+	    int prevHeuristic = curHeuristic;
+	    int rowIndex = move / width;
+	    int colIndex = move % width;
+	    int ltorDiagIndex = getltorDiagIndex(move);
+	    int rtolDiagIndex = getrtolDiagIndex(move);
+
+	    // Evaluate for black
+	    int[] rowBlack = new int[2];
+	    int[] colBlack = new int[2];
+	    int rowHeuristics = evaluateLine(rowBased[rowIndex], width, true, rowBlack);
+	    int colHeuristics = evaluateLine(colBased[colIndex], height, true, colBlack);
+	    int[] ltorBlack = new int[2];
+	    int[] rtolBlack = new int[2];
+        int ltorHeuristics = evaluateLine(ltorDiag[ltorDiagIndex],
+                Math.min(ltorDiagIndex + 1, width + height - 1 - ltorDiagIndex), true, ltorBlack);
+        int rtolHeuristics = evaluateLine(rtolDiag[rtolDiagIndex],
+                Math.min(rtolDiagIndex + 1, width + height - 1 - rtolDiagIndex), true, rtolBlack);
+
+        // Evaluate for white
+        int[] rowWhite = new int[2];
+        int[] colWhite = new int[2];
+        int rowAntiHeu = evaluateLine(rowBased[rowIndex], width, false, rowWhite);
+        int colAntiHeu = evaluateLine(colBased[colIndex], height, false, colWhite);
+        int[] ltorWhite = new int[2];
+        int[] rtolWhite = new int[2];
+        int ltorAntiHeu = evaluateLine(ltorDiag[ltorDiagIndex],
+                Math.min(ltorDiagIndex + 1, width + height - 1 - ltorDiagIndex), false, ltorWhite);
+        int rtolAntiHeu = evaluateLine(rtolDiag[rtolDiagIndex],
+                Math.min(rtolDiagIndex + 1, width + height - 1 - rtolDiagIndex), false, rtolWhite);
+
+        // For detecting composite patterns
+        int whiteOrigTotThree = whiteThree[rowIndex] + whiteThree[height + colIndex] + whiteThree[width + height + ltorDiagIndex]
+                + whiteThree[2*width + height - 1 + rtolDiagIndex];
+        int whiteOrigTotFour = whiteFour[rowIndex] + whiteFour[height + colIndex] + whiteFour[width + height + ltorDiagIndex]
+                + whiteFour[2*width + height - 1 + rtolDiagIndex];
+
+        int blackOrigTotThree = blackThree[rowIndex] + blackThree[height + colIndex] + blackThree[width + height + ltorDiagIndex]
+                + blackThree[2*width + height - 1 + rtolDiagIndex];
+        int blackOrigTotFour = blackFour[rowIndex] + blackFour[height + colIndex] + blackFour[width + height + ltorDiagIndex]
+                + blackFour[2*width + height - 1 + rtolDiagIndex];
+        if (isUpdate) {
+            
+        } else {
+
+        }
+    }
 	
 	private int evaluateBoardPV(boolean first) {
 		int curScore = 0;
 		// hasnone - 0, has3 - 1, has4 - 2; has33 - 3
 		// has34 or has44 - 4
 		int curStatus = 0;
-		int[] kind = new int[]{0};
+		int[] kind = new int[]{0, 0};
 		for (int i = 0; i < rowBased.length; i++) {
 			curScore += evaluateLine(rowBased[i], width, first, kind);
-			if (curStatus == 0) {
-				if (kind[0] == has_three)
-					curStatus = 1;
-				else if (kind[0] == has_four)
-					curStatus = 2;
-			} else if (curStatus == 1) {
-				if (kind[0] == has_three)
-					curStatus = 3;
-				else if (kind[0] == has_four) {
-					curStatus = 4;
-				}
-			} else if (curStatus == 2) {
-				if (kind[0] != has_none)
-					curStatus = 4;
-			} else if (curStatus == 3) {
-				if (kind[0] == has_four)
-					curStatus = 4;
-			}
 		}
 		
 		for (int i = 0; i < colBased.length; i++) {
 			curScore += evaluateLine(colBased[i], height, first, kind);
-			if (curStatus == 0) {
-				if (kind[0] == has_three)
-					curStatus = 1;
-				else if (kind[0] == has_four)
-					curStatus = 2;
-			} else if (curStatus == 1) {
-				if (kind[0] == has_three)
-					curStatus = 3;
-				else if (kind[0] == has_four) {
-					curStatus = 4;
-				}
-			} else if (curStatus == 2) {
-				if (kind[0] != has_none)
-					curStatus = 4;
-			} else if (curStatus == 3) {
-				if (kind[0] == has_four)
-					curStatus = 4;
-			}
 		}
 		
 		for (int i = 0; i < ltorDiag.length; i++) {
-			curScore += evaluateLine(ltorDiag[i], 
-					Math.min(i + 1, width + height - 1 - i), first, kind);
-			if (curStatus == 0) {
-				if (kind[0] == has_three)
-					curStatus = 1;
-				else if (kind[0] == has_four)
-					curStatus = 2;
-			} else if (curStatus == 1) {
-				if (kind[0] == has_three)
-					curStatus = 3;
-				else if (kind[0] == has_four) {
-					curStatus = 4;
-				}
-			} else if (curStatus == 2) {
-				if (kind[0] != has_none)
-					curStatus = 4;
-			} else if (curStatus == 3) {
-				if (kind[0] == has_four)
-					curStatus = 4;
-			}
+			curScore += evaluateLine(ltorDiag[i], Math.min(i + 1, width + height - 1 - i), first, kind);
 		}
 		
 		for (int i = 0; i < rtolDiag.length; i++) {
-			curScore += evaluateLine(rtolDiag[i], 
-					Math.min(i + 1, width + height - 1 - i), first, kind);
-			if (curStatus == 0) {
-				if (kind[0] == has_three)
-					curStatus = 1;
-				else if (kind[0] == has_four)
-					curStatus = 2;
-			} else if (curStatus == 1) {
-				if (kind[0] == has_three)
-					curStatus = 3;
-				else if (kind[0] == has_four) {
-					curStatus = 4;
-				}
-			} else if (curStatus == 2) {
-				if (kind[0] != has_none)
-					curStatus = 4;
-			} else if (curStatus == 3) {
-				if (kind[0] == has_four)
-					curStatus = 4;
-			}
+			curScore += evaluateLine(rtolDiag[i], Math.min(i + 1, width + height - 1 - i), first, kind);
 		}
 		
 		if (curScore >= winning_score)
 			return winning_score;
-
-		if (curStatus == 3)
-			return Math.max(curScore, three_three);
-		if (curStatus == 4)
-			return Math.max(curScore, four_four);
+        else if (kind[1] >= 2)
+            return four_four;
+        else if (kind[1] >= 1 && kind[0] >= 1)
+            return three_four;
+        else if (kind[0] >= 2)
+            return three_three;
 		
 		return curScore;
 	}
 	
 	public int getInc(int move, boolean first) {
 		// TODO Pay attention to composite patterns
+        // TODO after caching the heuristic values, update this as well
 		int prevTotal = 0;
 		int postTotal = 0;
 		int rowIdx = move / width;
@@ -383,8 +397,16 @@ public abstract class AbstractBoard {
             curScore += jump_three;
 	    return curScore;
     }
-	
-	public static int evaluateLine(int line, int numPos, boolean first, int[] criticalKind) {
+
+    /**
+     * Get line heuristics as well as number of three/fours
+     * @param line the line to evaluate
+     * @param numPos number of positions in the line
+     * @param first whether or not the subject is black
+     * @param criticalKind must be int[2], first entry stores # of threes, and second stores # of fours
+     * @return heuristic of the line
+     */
+	private static int evaluateLine(int line, int numPos, boolean first, int[] criticalKind) {
 		// TODO corner cases: pattern at the ends
 		// If less than 5 positions, no value
 		if (numPos < 5)
@@ -444,31 +466,45 @@ public abstract class AbstractBoard {
 		if (base4Str.contains(patFive))
 			return winning_score;
 		if (base4Str.contains(patOpenFour) || base4Str.contains(patSpecial))
+		    // Here the four is not counted, since the value is already recognized
 			return open_four;
-		
+
+        /**
+         * TODO note that this isn't necessarily accurate since theoretically there could be two fours/threes of the same pattern on the same line.
+         * But this is pointless in real games since that's unlikely to happen
+         */
 		// For open/jump three's and four's -- no double counting (impossible in real games)
-		if (base4Str.contains(patOJumpFour1) || base4Str.contains(patOJumpFour2))
-			curScore += ojump_four;
+		if (base4Str.contains(patOJumpFour1)) {
+            curScore += ojump_four;
+            criticalKind[1]++;
+        }
+        else if (base4Str.contains(patOJumpFour2)) {
+		    // Possible to create two open jump fours in one move
+		    curScore += ojump_four;
+		    criticalKind[1]++;
+        }
 		else if (base4Str.contains(patJumpFour1) || base4Str.contains(patJumpFour2) ||
-				base4Str.contains(patJumpFour3))
-			curScore += jump_four;
+				base4Str.contains(patJumpFour3)) {
+            curScore += jump_four;
+            criticalKind[1]++;
+        }
 		else if (base4Str.contains(patClosedFour1) || base4Str.contains(patClosedFour2)
 				|| base4Str.contains(patClosedFour3) || base4Str.contains(patClosedFour4)
 				|| base4Str.contains(patClosedFour5) || base4Str.startsWith(patClosedFourStart)
-				|| base4Str.endsWith(patClosedFourEnd))
-			curScore += closed_four;
-		else if (base4Str.contains(patOpenThree1) || base4Str.contains(patOpenThree2))
-			curScore += open_three;
-		else if (base4Str.contains(patJumpThree1) || base4Str.contains(patJumpThree2))
-			curScore += jump_three;
-		
-		// Record kind of critical pattern
-		if (curScore >= 15)
-			criticalKind[0] = has_four;
-		else if (curScore > 0)
-			criticalKind[0] = has_three;
-		else
-			criticalKind[0] = has_none;
+				|| base4Str.endsWith(patClosedFourEnd)) {
+            curScore += closed_four;
+            criticalKind[1]++;
+        }
+		else if (base4Str.contains(patOpenThree1) || base4Str.contains(patOpenThree2)) {
+            curScore += open_three;
+            criticalKind[0]++;
+        }
+        // Note that it's not impossible to have two jump_three's. E.g. xx_x_xx but that's effectively one cjump_three
+        // since it's not a double threat (blockable with one piece)
+		else if (base4Str.contains(patJumpThree1) || base4Str.contains(patJumpThree2)) {
+            curScore += jump_three;
+            criticalKind[0]++;
+        }
 		
 		int closedThreeCount = 0, startPos = 0;
 		if (base4Str.startsWith(patClosedThreeStart) || base4Str.endsWith(patClosedThreeEnd))
@@ -484,7 +520,7 @@ public abstract class AbstractBoard {
 			closedThreeCount ++;
 		}
 		curScore += closedThreeCount * closed_three;
-		
+
 		if (base4Str.contains(patClosedJumpThree) || base4Str.contains(patClosedJumpThree2)
 				|| base4Str.contains(patClosedJumpThree3) || base4Str.contains(patClosedJumpThree4)
 				|| base4Str.startsWith(patClosedJumpThreeStart) || base4Str.endsWith(patClosedJumpThreeEnd))
@@ -617,33 +653,33 @@ public abstract class AbstractBoard {
 		return returnVal;
 	}
 	
-	public int getltorDiagIndex(int position) {
+	private int getltorDiagIndex(int position) {
 		int rowIndex = position / width;
 		int colIndex = position % width;
 		return rowIndex - colIndex + width - 1;
 	}
 	
-	public int getrtolDiagIndex(int position) {
+	private int getrtolDiagIndex(int position) {
 		int rowIndex = position / width;
 		int colIndex = position % width;
 		return rowIndex + colIndex;
 	}
 	
-	public int getIndexOnLtoR(int position) {
+	private int getIndexOnLtoR(int position) {
 		int rowIndex = position / width;
 		int colIndex = position % width;
 		int ltorIdx = getltorDiagIndex(position);
 		return ltorIdx < width ? rowIndex : colIndex;
 	}
 	
-	public int getIndexOnRtoL(int position) {
+	private int getIndexOnRtoL(int position) {
 		int rowIndex = position / width;
 		int colIndex = position % width;
 		int rtolIdx = getrtolDiagIndex(position);
 		return rtolIdx < width ? rowIndex : width - 1 - colIndex;
 	}
-	
-	public int lrDiagToBoardPosition(int lrIndex, int indexOnLR) {
+
+    private int lrDiagToBoardPosition(int lrIndex, int indexOnLR) {
 		if (lrIndex < width) {
 			int rowIndex = indexOnLR;
 			int colIndex = (width - 1 - lrIndex) + indexOnLR;
@@ -654,8 +690,8 @@ public abstract class AbstractBoard {
 			return rowIndex * width + colIndex;
 		}
 	}
-	
-	public int rlDiagToBoardPosition(int rlIndex, int indexOnRL) {
+
+    private int rlDiagToBoardPosition(int rlIndex, int indexOnRL) {
 		if (rlIndex < width) {
 			int rowIndex = indexOnRL;
 			int colIndex = rlIndex - indexOnRL;
