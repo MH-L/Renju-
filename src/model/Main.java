@@ -107,6 +107,7 @@ public class Main {
 		btnPanel.add(aiGameBtn);
 		btnPanel.add(optionsBtn);
 		btnPanel.add(experimentalBtn);
+		machineLearningSetup();
 
 		singleplayerBtn.addActionListener(new ActionListener() {
 			@Override
@@ -146,15 +147,20 @@ public class Main {
 		experimentalBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                List<Integer> resultList = new ArrayList<>();
-                List<List<Integer>> historicalGames = LocalStorage.getAllPreviousGames(resultList);
-                BoardTree.statMap = Zobrist.getStatMap(historicalGames, resultList);
                 UnrestrictedCvCGame experiment = new UnrestrictedCvCGame(new UnrestrictedBoard(),
                         Difficulty.custom, Difficulty.custom);
                 experiment.setCustomAIParams(3, 3);
-                experiment.runCvCGameForRecord(1000);
+                experiment.runCvCGameForRecord(10000);
             }
         });
+	}
+
+	public static void machineLearningSetup() {
+		Zobrist.generateSeeds();
+		List<Integer> resultList = new ArrayList<>();
+		List<List<Integer>> historicalGames = LocalStorage.getAllPreviousGames(resultList);
+		BoardTree.statMap = Zobrist.getStatMap(historicalGames, resultList);
+		BoardTree.cachedLocs = LocalStorage.readCritLocs();
 	}
 
 	protected static JButton getPlainLookbtn(String displayText, String font, int fontSize, int fontStyle,
@@ -371,8 +377,6 @@ public class Main {
 				
 				// TODO get user's choices
 				singlePlayerOptionFrame.dispose();
-				if (senteOption.isSelected()) {
-				}
 				if (noviceDiffOption.isSelected())
 					game = new UnrestrictedGame(turnPolicy, Difficulty.novice);
 				else if (intermediateDiffOption.isSelected())
@@ -381,6 +385,9 @@ public class Main {
 					game = new UnrestrictedGame(turnPolicy, Difficulty.advanced);
 				else if (ultimateDiffOption.isSelected())
 					game = new UnrestrictedGame(turnPolicy, Difficulty.ultimate);
+				else if (mysteriousButton.isSelected()) {
+					game = new UnrestrictedGame(turnPolicy, Difficulty.custom);
+				}
 				else {
 					// For "Even novice is too hard", we use random XDDDD
 					int randNum = new Random().nextInt(4);

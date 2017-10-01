@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import model.Main;
 import org.junit.*;
 
 import algorithm.BoardTree;
@@ -38,14 +39,14 @@ public class BoardTreeTest {
 		bd.render();
 		System.out.println(bd.evaluateBoard());
 		int move = BoardTree.alphaBeta(bd, 4, Integer.MIN_VALUE, 
-				Integer.MAX_VALUE, true, new int[]{0});
+				Integer.MAX_VALUE, true);
 		System.out.println(move);
 		System.out.println(BoardTree.nodesNum);
 		
 		bd.reset();
 		bd.updateBoard(112, true);
 		move = BoardTree.alphaBeta(bd, 7, Integer.MIN_VALUE, 
-				Integer.MAX_VALUE, false, new int[]{0});
+				Integer.MAX_VALUE, false);
 		System.out.println(move);
 	}
 	
@@ -59,7 +60,7 @@ public class BoardTreeTest {
 		updateBoardInBatch(bd, ycoord, xcoord, false);
 		bd.render();
 		System.out.println(BoardTree.alphaBeta(bd, 5, Integer.MIN_VALUE, Integer.MAX_VALUE, 
-				false, new int[]{0}));
+				false));
 		
 		bd.reset();
 		
@@ -71,7 +72,7 @@ public class BoardTreeTest {
 		updateBoardInBatch(bd, ycoord, xcoord, false);
 		bd.render();
 		System.out.println(BoardTree.alphaBeta(bd, 5, Integer.MIN_VALUE, Integer.MAX_VALUE, 
-				false, new int[]{0}));
+				false));
 		
 		bd.reset();
 		xcoord = Arrays.asList(6,5,6,4,6,7,8,9,6,9,8);
@@ -82,7 +83,7 @@ public class BoardTreeTest {
 		updateBoardInBatch(bd, ycoord, xcoord, false);
 		bd.render();
 		System.out.println(BoardTree.alphaBeta(bd, 5, Integer.MIN_VALUE, Integer.MAX_VALUE, 
-				true, new int[]{0}));
+				true));
 		
 		System.out.println(BoardTree.nodesNum);
 	}
@@ -97,7 +98,7 @@ public class BoardTreeTest {
 		updateBoardInBatch(bd, ycoord, xcoord, false);
 		bd.render();
 		System.out.println(BoardTree.alphaBeta(bd, 6, Integer.MIN_VALUE, Integer.MAX_VALUE, 
-				false, new int[]{0}));
+				false));
 		
 		bd.reset();
 		xcoord = Arrays.asList(8,6,7,4,9,4,9,7,5,8,5,6,7,9);
@@ -108,7 +109,7 @@ public class BoardTreeTest {
 		updateBoardInBatch(bd, ycoord, xcoord, false);
 		bd.render();
 		System.out.println(BoardTree.alphaBeta(bd, 6, Integer.MIN_VALUE, Integer.MAX_VALUE, 
-				false, new int[]{0}));
+				false));
 		
 		bd.reset();
 		xcoord = Arrays.asList(7,8,7,6,7,8);
@@ -121,7 +122,7 @@ public class BoardTreeTest {
 		bd.render();
 		System.out.println(BoardTree.threatSpaceSearchV2(bd, 30, false, new int[]{0}, new int[]{0}));
 		System.out.println(BoardTree.alphaBeta(bd, 8, Integer.MIN_VALUE, Integer.MAX_VALUE, 
-				false, new int[]{0}));
+				false));
 	}
 	
 	@Test
@@ -134,8 +135,7 @@ public class BoardTreeTest {
 		updateBoardInBatch(bd, ycoord, xcoord, false);
 		bd.render();
 		System.out.println(BoardTree.alphaBeta(bd, 6, Integer.MIN_VALUE, Integer.MAX_VALUE, 
-				false, new int[]{0}));
-
+				false));
 	}
 	
 	private void updateBoardInBatch(AbstractBoard bd, List<Integer> ycoord, 
@@ -143,5 +143,41 @@ public class BoardTreeTest {
 		for (int i = 0; i < ycoord.size(); i++) {
 			bd.updateBoard(ycoord.get(i)*AbstractBoard.width + xcoord.get(i), first);
 		}
+	}
+
+	private void updateBoardInBatchFromEmpty(AbstractBoard bd, int... moves) {
+		if (bd.getStoneCount() != 0)
+			return;
+		boolean first = true;
+		for (int move : moves) {
+			bd.updateBoard(move, first);
+			first = !first;
+		}
+	}
+	
+	private void updateBoardInBatchUsingRecord(AbstractBoard bd, String record) {
+		String[] moves = record.split("\\|");
+		int[] actual = new int[moves.length];
+		for (int i = 0; i < moves.length; i++) {
+			actual[i] = Integer.parseInt(moves[i].trim());
+		}
+		
+		updateBoardInBatchFromEmpty(bd, actual);
+	}
+
+	@Test
+	public void testAlphaBetaLearning() {
+		bd.reset();
+//		updateBoardInBatchFromEmpty(bd, 96,64,82,65,97,79,67,112,98,95,51,99,52,37,66);
+//		updateBoardInBatchFromEmpty(bd, 96);
+		updateBoardInBatchUsingRecord(bd, "111");
+		Main.machineLearningSetup();
+		bd.render();
+		int[] value = new int[] {0};
+        System.out.println(BoardTree.alphaBetaCustom(bd, 8, Integer.MIN_VALUE, Integer.MAX_VALUE, false, value,98, 3,3,0));
+        System.out.println("Final output value: " + value[0]);
+        value[0] = 0;
+        System.out.println(BoardTree.alphaBetaMem(bd, 4, Integer.MIN_VALUE, Integer.MAX_VALUE, false, value, 0));
+        System.out.println("Final output value from mem: " + value[0]);
 	}
 }

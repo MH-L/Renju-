@@ -113,7 +113,7 @@ public abstract class AbstractBoard {
 		origRtoLDiag = origRtoLDiag ^ (stone << indexOnRtoLDiag * 2);
 		rtolDiag[rtolIndex] = origRtoLDiag;
 
-		zobristHash = Zobrist.zobristHash(location, first, zobristHash);
+//		zobristHash = Zobrist.zobristHash(location, first, zobristHash);
 		return true;
 	}
 	
@@ -172,9 +172,12 @@ public abstract class AbstractBoard {
 	/**
 	 * Add some random perturbation to board evalulation function
 	 * so that the moves will have some randomness.
+     *
+     * Newer versions are deprecating this. It is a misunderstanding of randomness in strategy.
 	 * @param oscillation
 	 * @return
 	 */
+	@Deprecated
 	public int evaluateBoardRng(int oscillation) {
 		if (oscillation == 0)
 			return evaluateBoardPV(true) - evaluateBoardPV(false);
@@ -183,7 +186,7 @@ public abstract class AbstractBoard {
 		return evaluateBoardPV(true) - evaluateBoardPV(false) + randomPurt;
 	}
 	
-	public int evaluateBoardPV(boolean first) {
+	private int evaluateBoardPV(boolean first) {
 		int curScore = 0;
 		// hasnone - 0, has3 - 1, has4 - 2; has33 - 3
 		// has34 or has44 - 4
@@ -330,6 +333,56 @@ public abstract class AbstractBoard {
 		
 		return postTotal - prevTotal;
 	}
+
+	private static int evaluateLineNoBrainer(int line, int numPos, boolean first) {
+	    if (numPos < 5)
+	        return 0;
+
+	    String base4Str = Integer.toString(line, 4);
+        while (base4Str.length() < numPos) {
+            base4Str = '0' + base4Str;
+        }
+
+        int curScore = 0;
+        String patOpenFour = first ? "033330" : "022220";
+        String patSpecial = first ? "3033303" : "2022202";
+        String patJumpFour1 = first ? "33033" : "22022";
+        String patJumpFour2 = first ? "30333" : "20222";
+        String patJumpFour3 = first ? "33303" : "22202";
+        String patOJumpFour1 = first ? "303330" : "202220";
+        String patOJumpFour2 = first ? "033303" : "022202";
+        String patClosedFour1 = first ? "33033" : "22022";
+        String patClosedFour2 = first ? "233330" : "322220";
+        String patClosedFour3 = first ? "033332" : "022223";
+        String patClosedFour4 = first ? "233303" : "322202";
+        String patClosedFour5 = first ? "303332" : "202223";
+        String patClosedFourEnd = first ? "03333" : "02222";
+        String patClosedFourStart = first ? "33330" : "22220";
+        String patOpenThree1 = first ? "003330" : "002220";
+        String patOpenThree2 = first ? "033300" : "022200";
+        String patJumpThree1 = first ? "033030" : "022020";
+        String patJumpThree2 = first ? "030330" : "020220";
+
+        if (base4Str.contains(patOpenFour) || base4Str.contains(patSpecial))
+            return open_four;
+
+        // For open/jump three's and four's -- no double counting (impossible in real games)
+        if (base4Str.contains(patOJumpFour1) || base4Str.contains(patOJumpFour2))
+            curScore += ojump_four;
+        else if (base4Str.contains(patJumpFour1) || base4Str.contains(patJumpFour2) ||
+                base4Str.contains(patJumpFour3))
+            curScore += jump_four;
+        else if (base4Str.contains(patClosedFour1) || base4Str.contains(patClosedFour2)
+                || base4Str.contains(patClosedFour3) || base4Str.contains(patClosedFour4)
+                || base4Str.contains(patClosedFour5) || base4Str.startsWith(patClosedFourStart)
+                || base4Str.endsWith(patClosedFourEnd))
+            curScore += closed_four;
+        else if (base4Str.contains(patOpenThree1) || base4Str.contains(patOpenThree2))
+            curScore += open_three;
+        else if (base4Str.contains(patJumpThree1) || base4Str.contains(patJumpThree2))
+            curScore += jump_three;
+	    return curScore;
+    }
 	
 	public static int evaluateLine(int line, int numPos, boolean first, int[] criticalKind) {
 		// TODO corner cases: pattern at the ends
@@ -537,6 +590,19 @@ public abstract class AbstractBoard {
 		
 		return ret;
 	}
+
+	public Set<Integer> nextMovesRed() {
+        List<Integer> allStones = allStonesOnBoard();
+        Set<Integer> ret = new HashSet<>();
+        for (int stone : allStones) {
+            for (int adj : adjacentMapRed.get(stone)) {
+                if (isSquareEmpty(adj))
+                    ret.add(adj);
+            }
+        }
+
+        return ret;
+    }
 	
 	private List<Integer> allStonesOnBoard() {
 		List<Integer> returnVal = new ArrayList<>();
@@ -610,6 +676,13 @@ public abstract class AbstractBoard {
 		int rtolIdx = getrtolDiagIndex(move);
 		int indexOnLtoRDiag = ltorIdx < width ? rowIndex : colIndex;
 		int indexOnRtoLDiag = rtolIdx < width ? rowIndex : width - 1 - colIndex;
+		int stone = rowBased[rowIndex] & (3 << (colIndex * 2));
+		// Restore the zobrist hash.
+//		if (stone == sente_stone) {
+//		    zobristHash = Zobrist.zobristHash(move, true, zobristHash);
+//        } else if (stone == gote_stone) {
+//            zobristHash = Zobrist.zobristHash(move, false, zobristHash);
+//        }
 		rowBased[rowIndex] &= (-1 - (3 << (colIndex * 2)));
 		colBased[colIndex] &= (-1 - (3 << (rowIndex * 2)));
 		rtolDiag[rtolIdx] &= (-1 - (3 << (indexOnRtoLDiag * 2)));
@@ -1042,7 +1115,12 @@ public abstract class AbstractBoard {
 		
 		return false;
 	}
-	
+
+    /**
+     * Find places to form a four
+     * @param first
+     * @return
+     */
 	public Map<Integer, Integer> findThreatLocation(boolean first) {
 		List<Integer> selfStones = allSelfStones(first);
 		Map<Integer, Integer> returnVal = new HashMap<>();
@@ -1141,5 +1219,17 @@ public abstract class AbstractBoard {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public List<Integer> getMoveSequence() {
+        return moveSequence;
+    }
+
+    public long getZobristHash() {
+	    return zobristHash;
+    }
+
+    public void updateHash(int location, boolean first) {
+        zobristHash = Zobrist.zobristHash(location, first, zobristHash);
     }
 }

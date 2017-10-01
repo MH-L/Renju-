@@ -1,9 +1,13 @@
 package model;
 
+import algorithm.BoardTree;
+import algorithm.StatObj;
+
 public class UnrestrictedCvCGame extends AbstractGame {
 	private ComPlayer com1;
 	private ComPlayer com2;
 	private UnrestrictedBoard board;
+	private static StatObj sessional = new StatObj(0,0,0);
 	
 	public UnrestrictedCvCGame(Difficulty blackDiff, Difficulty whiteDiff) {
 		bg.setupBoard(new UnrestrictedBoard());
@@ -12,6 +16,7 @@ public class UnrestrictedCvCGame extends AbstractGame {
 	}
 
 	public UnrestrictedCvCGame(UnrestrictedBoard ub, Difficulty blackDiff, Difficulty whiteDiff) {
+	    super(false);
 	    board = ub;
         com1 = new ComPlayer(board, true, blackDiff);
         com2 = new ComPlayer(board, false, whiteDiff);
@@ -93,17 +98,29 @@ public class UnrestrictedCvCGame extends AbstractGame {
 	public void runCvCGameForRecord(int times) {
 		for (int i = 0; i < times; i++) {
 			int result = runCvCGameNoGraphics();
-			board.writeRecords(result);
+			if (result == 1) {
+			    sessional.wins++;
+            } else if (result == 2) {
+			    sessional.losses++;
+            } else {
+			    sessional.ties++;
+            }
+            System.out.format("Sessional stats: wins - %s, ties - %s, losses - %s\n", sessional.wins,
+                    sessional.ties, sessional.losses);
+            board.writeRecords(result);
             board.reset();
 		}
 	}
 
 	private int runCvCGameNoGraphics() {
+	    activePlayer = true;
 		while (true) {
 			int moveResult = 0;
 			if (activePlayer) {
+			    BoardTree.printStatObj(board);
 				int comMove = com1.makeMove();
 				board.updateBoard(comMove, true);
+				board.updateHash(comMove, true);
                 System.out.println("Computer 1 Move: " + comMove);
                 board.addMoveToSequence(comMove);
                 if (board.someoneWins()) {
@@ -112,9 +129,10 @@ public class UnrestrictedCvCGame extends AbstractGame {
                     moveResult = 3;
                 }
             } else {
-			    // TODO buggy
+                BoardTree.printStatObj(board);
 				int comMove = com2.makeMove();
 				board.updateBoard(comMove, false);
+				board.updateHash(comMove, false);
                 System.out.println("Computer 2 Move: " + comMove);
                 board.addMoveToSequence(comMove);
                 if (board.someoneWins()) {
@@ -125,6 +143,8 @@ public class UnrestrictedCvCGame extends AbstractGame {
             }
 
 			if (moveResult != 0) {
+			    // TODO refactor this into abstract board class.
+			    BoardTree.integrateNewGameRec(board.getMoveSequence(), moveResult);
                 System.out.println("Game Finished, Result: " + moveResult);
                 return moveResult;
 			}

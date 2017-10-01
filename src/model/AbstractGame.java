@@ -79,6 +79,10 @@ public abstract class AbstractGame {
 	public enum Result {
 		UNDECIDED, SENTE, GOTE, TIE
 	}
+
+	public AbstractGame(boolean setup) {
+	    rng = new Random();
+    }
 	
 	public AbstractGame() {
 		rng = new Random();

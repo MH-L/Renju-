@@ -29,7 +29,7 @@ public class Zobrist {
 
     public static long zobristHash(int lastMove, boolean isFirst, long originalHash) {
         int ypos = lastMove / AbstractBoard.width;
-        int xpos = lastMove / AbstractBoard.height;
+        int xpos = lastMove % AbstractBoard.width;
         return isFirst ? originalHash ^ seeds[ypos][xpos][1] : originalHash ^ seeds[ypos][xpos][0];
     }
 

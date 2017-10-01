@@ -1,9 +1,7 @@
 package storage;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 import model.AbstractBoard;
@@ -12,6 +10,9 @@ import model.AbstractGame.Difficulty;
 public class LocalStorage {
 	private static final String SEED_FILE_NAME = "seed.renj";
 	private static final String RECORD_SUBDIR = "cachedRecords" + File.separator;
+	private static final String CRITICAL_LOCATIONS_DIR = "criticalLocs" + File.separator;
+	private static final int MAX_BUFFER_SIZE = 30;
+	private static Set<Long> buffer = new HashSet<>();
 
 	private static String getGameStorageBaseDir() {
 		String homeDir = System.getProperty("user.home");
@@ -27,13 +28,20 @@ public class LocalStorage {
 		}
 	}
 
-	private static void forceWriteInitialSeed() {
+	public static void forceWriteInitialSeed() {
 		try {
 			writeSeedWithOption(true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
+
+	public static void addCritical(long hash) {
+	    buffer.add(hash);
+	    if (buffer.size() > MAX_BUFFER_SIZE) {
+	        writeAllCriticalLocations();
+        }
+    }
 
 	private static void writeSeedWithOption(boolean force) throws IOException {
 		String seedFileName = getGameStorageBaseDir() + SEED_FILE_NAME;
@@ -69,6 +77,21 @@ public class LocalStorage {
 		}
 	}
 
+	public static void writeAllCriticalLocations() {
+		String locationDir = getGameStorageBaseDir() + CRITICAL_LOCATIONS_DIR;
+		File critLocs = new File(locationDir + "criticals001.txt");
+		try {
+			PrintWriter pr = new PrintWriter(new FileWriter(critLocs, true));
+			for (Long loc : buffer) {
+				pr.println(loc);
+			}
+			pr.close();
+			buffer.clear();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static void updateGameRecord(List<Integer> gameMoves, int result) throws IOException{
 		if (gameMoves.isEmpty()) {
 			return;
@@ -77,7 +100,7 @@ public class LocalStorage {
 		File recordDirFile = new File(recordDirPath);
 		// TODO Find a file that is not too big; if no file found, create one
 		File[] recordList = recordDirFile.listFiles();
-		PrintWriter pr = new PrintWriter(new FileWriter(recordDirPath + "record001.txt", true));
+		PrintWriter pr = new PrintWriter(new FileWriter(recordDirPath + "record013_sver.txt", true));
 		pr.print(gameMoves.get(0));
 		for (int i = 1; i < gameMoves.size(); i++) {
 			pr.print("|" + gameMoves.get(i));
@@ -87,6 +110,24 @@ public class LocalStorage {
 		pr.println();
 		pr.close();
 	}
+
+	public static Set<Long> readCritLocs() {
+	    Set<Long> returnVal = new HashSet<>();
+	    File locsDir = new File(getGameStorageBaseDir() + CRITICAL_LOCATIONS_DIR);
+        File[] fileList = locsDir.listFiles();
+        for (File f : fileList) {
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(f));
+                String line = "";
+                while ((line = br.readLine()) != null) {
+                    returnVal.add(Long.parseLong(line));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return returnVal;
+    }
 
 	public static void initializeLocalStorage() throws IOException {
 		String homeDirStr = System.getProperty("user.home");
@@ -98,8 +139,8 @@ public class LocalStorage {
 		File statsFile = new File(gameBaseDir + recordInB64 + ".renj");
 		if (statsFile.createNewFile()) {
 			PrintWriter pr = new PrintWriter(statsFile);
-			pr.println("0|0|0_0|0|0_0|0|0_0|0|0");
-			pr.println("0|0|0_0|0|0_0|0|0_0|0|0");
+			pr.println("0|0|0_0|0|0_0|0|0_0|0|0_0|0|0");
+			pr.println("0|0|0_0|0|0_0|0|0_0|0|0_0|0|0");
 			pr.close();
 		}
 	}
@@ -159,7 +200,7 @@ public class LocalStorage {
 		case ultimate:
 			recs = levels[3].split("\\|");
 			recs[result] = (Integer.parseInt(recs[result]) + 1) + "";
-			newRec = levels[0] + '_' + levels[1] + '_' + levels[2] + '_' + 
+			newRec = levels[0] + '_' + levels[1] + '_' + levels[2] + '_' +
 					(recs[0] + '|' + recs[1] + '|' + recs[2] + '|');
 			return newRec;
 		default:

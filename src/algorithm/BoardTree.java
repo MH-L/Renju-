@@ -10,13 +10,18 @@ import java.util.Random;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.sun.org.apache.xpath.internal.SourceTree;
 import model.AbstractBoard;
 import model.UnrestrictedBoard;
 
 public class BoardTree {
 	public static int nodesNum = 0;
-	private static final int MAX_BIAS = 1000;
+	private static final int MAX_BIAS = 50;
 	public static Map<Long, StatObj> statMap = new HashMap<>();
+	public static Set<Long> cachedLocs = new HashSet<>();
+
+	// Meant to distinguish calls from outside from recursive calls.
+	public static final int SPECIAL_HEURISTIC = 1000000001;
 	/**
 	 * Do alpha-beta pruning, returning the best move under given depth.
 	 * 
@@ -26,16 +31,23 @@ public class BoardTree {
 	 * @param beta
 	 * @param maximizing Black is always the maximizing player, and
 	 * 		white is always the minimizing player.
-	 * @param value
 	 * @return
 	 */
 	public static int alphaBeta(UnrestrictedBoard bd, int depth, int alpha, 
-			int beta, boolean maximizing, int[] value) {
-		return alphaBetaMem(bd, depth, alpha, beta, maximizing, value, -1);
+			int beta, boolean maximizing) {
+		return alphaBetaMem(bd, depth, alpha, beta, maximizing, new int[]{SPECIAL_HEURISTIC}, -1);
 	}
 	
 	public static int alphaBetaMem(UnrestrictedBoard bd, int depth, int alpha, 
 			int beta, boolean maximizing, int[] value, int lastMove) {
+	    if (cachedLocs.contains(bd.getZobristHash()) && value[0] != SPECIAL_HEURISTIC) {
+            value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
+            return -1;
+        }
+
+        if (value[0] == SPECIAL_HEURISTIC)
+            value[0] = 0;
+
 		if (depth == 0) {
 			nodesNum++;
 			value[0] = bd.evaluateBoard();
@@ -96,7 +108,7 @@ public class BoardTree {
 			int inc = bd.getInc(mv, maximizing);
 			// TODO best-looking moves are checked (Allis, 1994)
 			// TODO inc function might be buggy
-			if (inc > -1) {
+			if (inc > 3) {
 				nmsorted.add(mv);
 				incMap.put(mv, inc);
 			}
@@ -166,24 +178,52 @@ public class BoardTree {
 	
 	public static int alphaBetaCustom(UnrestrictedBoard bd, int depth, int alpha, 
 			int beta, boolean maximizing, int[] value, int lastMove, 
-			int evalOscillation, int selectionThreshold) {
+			int evalOscillation, int selectionThreshold, int levelToRoot) {
+        if (cachedLocs.contains(bd.getZobristHash()) && levelToRoot != 0) {
+            value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
+            System.out.println("This is saved by me.");
+            return -1; // return value doesn't matter here, since it is not the root node (levelToRoot != 0)s
+        }
 
 		if (depth == 0) {
 			nodesNum++;
-			value[0] = bd.evaluateBoardRng(evalOscillation);
+			value[0] = bd.evaluateBoard();
 			return -1;
 		}
 		
 		if ((lastMove >= 0 && bd.checkWinningLite(lastMove, !maximizing)) || 
 				bd.someoneWins()) {
 			nodesNum++;
-			value[0] = bd.evaluateBoardRng(evalOscillation);
+			value[0] = bd.evaluateBoard();
 			return -1;
 		}
 		
-		// Sort next moves based on increment of heuristic function in descending order
-		// (larger heuristic improvements will be checked earlier)
-		Set<Integer> nextMoves = bd.nextMoves();
+		int winningMove = bd.canWinNextMove(maximizing);
+		if (winningMove >= 0) {
+			value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
+			return winningMove;
+		}
+
+		int[] blocking = new int[]{0};
+		if (lastMove >= 0 && bd.formedThreat(!maximizing, lastMove, blocking)) {
+			int onlyMove = blocking[0];
+			bd.updateBoard(onlyMove, maximizing);
+			alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, onlyMove);
+			bd.withdrawMove(onlyMove);
+			return onlyMove;
+		}
+		
+		Set<Integer> nextMoves = new HashSet<>();
+		Set<Integer> allThrees = bd.findAllThrees(!maximizing);
+		if (!allThrees.isEmpty()) {
+			Map<Integer, Integer> thLocations = bd.findThreatLocation(maximizing);
+			nextMoves = allThrees;
+			nextMoves.addAll(thLocations.keySet());
+		} else {
+			nextMoves = bd.getStoneCount() > 3 ? bd.nextMoves() : bd.nextMovesRed();
+		}
+		
+		// Sort next move based on increment of heuristic value
 		if (nextMoves.isEmpty()) {
 			if (bd.boardFull()) {
 				value[0] = bd.evaluateBoard();
@@ -223,43 +263,62 @@ public class BoardTree {
 			value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
 			return nmsorted.get(0);
 		}
-		
+
+		// TODO add oscillation only to the first layer
 		int bestMove = -1;
 		if (maximizing) {
+			// case for black
 			int maxVal = Integer.MIN_VALUE;
 			for (int move : nmsorted) {
 				bd.updateBoard(move, maximizing);
+				bd.updateHash(move, maximizing);
 				nodesNum++;
-				alphaBetaCustom(bd, depth-1, alpha, beta, !maximizing, value, move, evalOscillation, selectionThreshold);
+//				alphaBetaCustom(bd, depth-1, alpha, beta, !maximizing, value, move, evalOscillation, selectionThreshold, levelToRoot + 1);
+				alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, move);
+				if (levelToRoot == 0) {
+				    // sway the value
+				    value[0] = value[0] + new Random().nextInt(2*evalOscillation + 1) - evalOscillation;
+				    if (bd.getStoneCount() > 3)
+				        value[0] = value[0] + getBias(bd.getZobristHash());
+                }
 				if (value[0] > maxVal) {
 					maxVal = value[0];
 					bestMove = move;
 				}
 				
 				bd.withdrawMove(move);
+				// Just re-apply XOR operation to restore the hash.
+				bd.updateHash(move, maximizing);
 				alpha = Math.max(alpha, maxVal);
 				if (beta <= alpha)
 					break;
 			}
-			
-			value[0] = maxVal;
 		} else {
+			// case for white
 			int minVal = Integer.MAX_VALUE;
 			for (int move : nmsorted) {
 				bd.updateBoard(move, maximizing);
+                bd.updateHash(move, maximizing);
 				nodesNum++;
-				alphaBetaCustom(bd, depth-1, alpha, beta, !maximizing, value, move, evalOscillation, selectionThreshold);
+//				alphaBetaCustom(bd, depth-1, alpha, beta, !maximizing, value, move, evalOscillation, selectionThreshold, levelToRoot + 1);
+				alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, move);
+				if (levelToRoot == 0) {
+                    // sway the value
+                    value[0] = value[0] + new Random().nextInt(2*evalOscillation + 1) - evalOscillation;
+                    if (bd.getStoneCount() > 2)
+                        value[0] = value[0] + getBias(bd.getZobristHash());
+                }
 				if (value[0] < minVal) {
 					minVal = value[0];
 					bestMove = move;
 				}
 				bd.withdrawMove(move);
+				// ditto
+                bd.updateHash(move, maximizing);
 				beta = Math.min(beta, minVal);
 				if (beta <= alpha)
 					break;
 			}
-			
-			value[0] = minVal;
 		}
 		
 		return bestMove;
@@ -378,6 +437,36 @@ public class BoardTree {
 	 * @return the bias
 	 */
 	private static int getBiasFromHistory(double winProbability, double loseProbability, int support) {
-		return (int) (Math.pow(winProbability - loseProbability, 1/3) * (1 - Math.exp(-support)) * MAX_BIAS);
+	    int multiplier = winProbability > loseProbability ? 1 : -1;
+		return multiplier * (int) (Math.exp(Math.abs(winProbability - loseProbability) - 1) * (Math.pow(Math.min(1, (double) support / 1000.0), 1.0/3.0)) * MAX_BIAS);
+	}
+
+	public static void printStatObj(AbstractBoard bd) {
+	    if (statMap.containsKey(bd.getZobristHash())) {
+	        StatObj obj = statMap.get(bd.getZobristHash());
+            System.out.format("Wins: %s, Ties: %s, Losses: %s", obj.wins, obj.ties, obj.losses);
+            System.out.println();
+            return;
+        }
+        System.out.println("No data.");
+    }
+
+    public static void integrateNewGameRec(List<Integer> game, int result) {
+		long currentHash = 0;
+		for (int j = 0; j < game.size(); j++) {
+			int lastMove = game.get(j);
+			if (!statMap.containsKey(currentHash)) {
+				statMap.put(currentHash, new StatObj(0,0,0));
+			}
+
+			if (result == 1) {
+				statMap.get(currentHash).wins++;
+			} else if (result == 2) {
+				statMap.get(currentHash).losses++;
+			} else {
+				statMap.get(currentHash).ties++;
+			}
+			currentHash = Zobrist.zobristHash(lastMove, j % 2 == 0, currentHash);
+		}
 	}
 }
