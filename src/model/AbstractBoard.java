@@ -89,10 +89,10 @@ public abstract class AbstractBoard {
 		colBasedEval = new int[width];
 		ltorDiagEval = new int[width + height - 1];
 		rtolDiagEval = new int[width + height - 1];
-		whiteThree = new int[2*width + 2*height - 2];
-        whiteFour = new int[2*width + 2*height - 2];
-        blackThree = new int[2*width + 2*height - 2];
-        blackFour = new int[2*width + 2*height - 2];
+		whiteThree = new int[3*width + 3*height - 2];
+        whiteFour = new int[3*width + 3*height - 2];
+        blackThree = new int[3*width + 3*height - 2];
+        blackFour = new int[3*width + 3*height - 2];
 		adjacentMap = new HashMap<>();
 		adjacentMapRed = new HashMap<>();
 		evalMapsBlack = new ArrayList<>(width + 1);
@@ -224,8 +224,7 @@ public abstract class AbstractBoard {
      * @param isUpdate set to true if this is an update, false if withdraw
      */
 	private void updateHeuristics(int move, boolean isFirst, boolean isUpdate) {
-	    // TODO things to consider: what if after withdrawal the composite pattern is gone?
-	    int prevHeuristic = curHeuristic;
+	    // TODO things to consider: what if after withdrawal the composite pattern is gone? -- solved
 	    int rowIndex = move / width;
 	    int colIndex = move % width;
 	    int ltorDiagIndex = getltorDiagIndex(move);
@@ -257,19 +256,53 @@ public abstract class AbstractBoard {
 
         // For detecting composite patterns
         int whiteOrigTotThree = whiteThree[rowIndex] + whiteThree[height + colIndex] + whiteThree[width + height + ltorDiagIndex]
-                + whiteThree[2*width + height - 1 + rtolDiagIndex];
+                + whiteThree[2*width + 2*height - 1 + rtolDiagIndex];
         int whiteOrigTotFour = whiteFour[rowIndex] + whiteFour[height + colIndex] + whiteFour[width + height + ltorDiagIndex]
-                + whiteFour[2*width + height - 1 + rtolDiagIndex];
+                + whiteFour[2*width + 2*height - 1 + rtolDiagIndex];
 
         int blackOrigTotThree = blackThree[rowIndex] + blackThree[height + colIndex] + blackThree[width + height + ltorDiagIndex]
-                + blackThree[2*width + height - 1 + rtolDiagIndex];
+                + blackThree[2*width + 2*height - 1 + rtolDiagIndex];
         int blackOrigTotFour = blackFour[rowIndex] + blackFour[height + colIndex] + blackFour[width + height + ltorDiagIndex]
-                + blackFour[2*width + height - 1 + rtolDiagIndex];
-        if (isUpdate) {
-            
-        } else {
+                + blackFour[2*width + 2*height - 1 + rtolDiagIndex];
 
-        }
+        int whiteCurTotThree = rowWhite[0] + colWhite[0] + ltorWhite[0] + rtolWhite[0];
+        int whiteCurTotFour = rowWhite[1] + colWhite[1] + ltorWhite[1] + rtolWhite[1];
+        int blackCurTotThree = rowBlack[0] + colBlack[0] + ltorBlack[0] + rtolBlack[0];
+        int blackCurTotFour = rowBlack[1] + colBlack[1] + ltorBlack[1] + rtolBlack[1];
+
+        whiteThree[rowIndex] = rowWhite[0];
+        whiteThree[height + colIndex] = colWhite[0];
+        whiteThree[width + height + ltorDiagIndex] = ltorWhite[0];
+        whiteThree[2*width + 2*height + rtolDiagIndex] = rtolWhite[0];
+        whiteFour[rowIndex] = rowWhite[1];
+        whiteFour[height + colIndex] = colWhite[1];
+        whiteFour[width + height + ltorDiagIndex] = ltorWhite[1];
+        whiteFour[2*width + 2*height + rtolDiagIndex] = rtolWhite[1];
+
+        blackThree[rowIndex] = rowBlack[0];
+        blackThree[height + colIndex] = colBlack[0];
+        blackThree[width + height + ltorDiagIndex] = ltorBlack[0];
+        blackThree[2*width + 2*height + rtolDiagIndex] = rtolBlack[0];
+        blackFour[rowIndex] = rowBlack[1];
+        blackFour[height + colIndex] = colBlack[1];
+        blackFour[width + height + ltorDiagIndex] = ltorBlack[1];
+        blackFour[2*width + 2*height + rtolDiagIndex] = rtolBlack[1];
+
+        // TODO update board heuristics as well as totals (3&4)
+        totWhiteThree = totWhiteThree - whiteOrigTotThree + whiteCurTotThree;
+        totWhiteFour = totWhiteFour - whiteOrigTotFour + whiteCurTotFour;
+        totBlackThree = totBlackThree - blackOrigTotThree + blackCurTotThree;
+        totBlackFour = totBlackFour - blackOrigTotFour + blackCurTotFour;
+
+        int prevTotEval = rowBasedEval[rowIndex] + colBasedEval[colIndex] + ltorDiagEval[ltorDiagIndex]
+                + rtolDiagEval[rtolDiagIndex];
+        rowBasedEval[rowIndex] = rowHeuristics - rowAntiHeu;
+        colBasedEval[colIndex] = colHeuristics - colAntiHeu;
+        ltorDiagEval[ltorDiagIndex] = ltorHeuristics - ltorAntiHeu;
+        rtolDiagEval[rtolDiagIndex] = rtolHeuristics - rtolAntiHeu;
+        int curTotEval = rowBasedEval[rowIndex] + colBasedEval[colIndex] + ltorDiagEval[ltorDiagIndex]
+                + rtolDiagEval[rtolDiagIndex];
+        curHeuristic = curHeuristic - prevTotEval + curTotEval;
     }
 	
 	private int evaluateBoardPV(boolean first) {
@@ -421,6 +454,13 @@ public abstract class AbstractBoard {
 		while (base4Str.length() < numPos) {
 			base4Str = '0' + base4Str;
 		}
+
+		// Consider borders as walls or opponent pieces, so corner cases are solved
+		if (first) {
+		    base4Str = '2' + base4Str + '2';
+        } else {
+		    base4Str = '3' + base4Str + '3';
+        }
 		
 		int curScore = 0;
 		String patFive = first ? "33333" : "22222";
@@ -436,8 +476,6 @@ public abstract class AbstractBoard {
 		String patClosedFour3 = first ? "033332" : "022223";
 		String patClosedFour4 = first ? "233303" : "322202";
 		String patClosedFour5 = first ? "303332" : "202223";
-		String patClosedFourEnd = first ? "03333" : "02222";
-		String patClosedFourStart = first ? "33330" : "22220";
 		String patOpenThree1 = first ? "003330" : "002220";
 		String patOpenThree2 = first ? "033300" : "022200";
 		String patJumpThree1 = first ? "033030" : "022020";
@@ -450,13 +488,11 @@ public abstract class AbstractBoard {
 		String patClosedThreeStart = first ? "33300" : "22200";
 		String patClosedThreesp = first ? "2033302" : "3022203";
 		String patClosedThreespStart = first ? "033302" : "022203";
-		String patClosedThreespEnd = first ? "203330" : "302220";
 		String patClosedJumpThree = first ? "233030" : "322020";
 		String patClosedJumpThree2 = first ? "030332" : "020223";
 		String patClosedJumpThree3 = first ? "230330" : "320220";
 		String patClosedJumpThree4 = first ? "033032" : "022023";
 		String patClosedJumpThreeStart = first ? "33030" : "22020";
-		String patClosedJumpThreeEnd = first ? "03033" : "02022";
 		String patOpenTwo = first ? "003300" : "002200";
 		String patSJTwo = first ? "0030300" : "0020200";
 		String patBJTwo = first ? "030030" : "020020";
@@ -490,8 +526,7 @@ public abstract class AbstractBoard {
         }
 		else if (base4Str.contains(patClosedFour1) || base4Str.contains(patClosedFour2)
 				|| base4Str.contains(patClosedFour3) || base4Str.contains(patClosedFour4)
-				|| base4Str.contains(patClosedFour5) || base4Str.startsWith(patClosedFourStart)
-				|| base4Str.endsWith(patClosedFourEnd)) {
+				|| base4Str.contains(patClosedFour5)) {
             curScore += closed_four;
             criticalKind[1]++;
         }
@@ -523,11 +558,10 @@ public abstract class AbstractBoard {
 
 		if (base4Str.contains(patClosedJumpThree) || base4Str.contains(patClosedJumpThree2)
 				|| base4Str.contains(patClosedJumpThree3) || base4Str.contains(patClosedJumpThree4)
-				|| base4Str.startsWith(patClosedJumpThreeStart) || base4Str.endsWith(patClosedJumpThreeEnd))
+				|| base4Str.startsWith(patClosedJumpThreeStart))
 			curScore += cjump_three;
 		
-		if (base4Str.contains(patClosedThreesp) || base4Str.startsWith(patClosedThreespStart)
-				|| base4Str.endsWith(patClosedThreespEnd))
+		if (base4Str.contains(patClosedThreesp) || base4Str.startsWith(patClosedThreespStart))
 			curScore += closed_three;
 		startPos = 0;
 		int openTwoCount = 0;
