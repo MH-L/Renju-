@@ -50,26 +50,26 @@ public class UnrestrictedBoardTest {
 		bd.updateBoard(32, true);
 		bd.updateBoard(46, true);
 		bd.updateBoard(60, true);
-		assertEquals(1000000, bd.evaluateBoard());
+		assertEquals(1000000, bd.getHeuristics());
 		bd.render();
 		bd.reset();
 		bd.updateBoard(4, true);
 		bd.updateBoard(18, true);
 		bd.updateBoard(32, true);
-		assertEquals(4, bd.evaluateBoard());
+		assertEquals(4, bd.getHeuristics());
 		bd.updateBoard(46, true);
-		assertEquals(15, bd.evaluateBoard());
+		assertEquals(15, bd.getHeuristics());
 		bd.reset();
 		bd.render();
 		bd.updateBoard(4, true);
 		bd.updateBoard(18, true);
 		bd.updateBoard(32, true);
 		bd.updateBoard(60, true);
-		assertEquals(13, bd.evaluateBoard());
+		assertEquals(13, bd.getHeuristics());
 		bd.updateBoard(46, false);
-		assertEquals(0, bd.evaluateBoard());
+		assertEquals(0, bd.getHeuristics());
 		bd.updateBoard(33, true);
-		assertEquals(5, bd.evaluateBoard());
+		assertEquals(5, bd.getHeuristics());
 		bd.render();
 		
 		bd.reset();
@@ -77,9 +77,9 @@ public class UnrestrictedBoardTest {
 		bd.updateBoard(18, true);
 		bd.updateBoard(34, true);
 		bd.updateBoard(50, true);
-		assertEquals(bd.evaluateBoard(), 15);
+		assertEquals(bd.getHeuristics(), 15);
 		bd.updateBoard(66, true);
-		assertEquals(bd.evaluateBoard(), 1000000);
+		assertEquals(bd.getHeuristics(), 1000000);
 	}
 	
 	@Test

@@ -106,6 +106,7 @@ public abstract class AbstractBoard {
 	}
 	
 	/**
+     * CORE FUNCTION
 	 * Update board with given location: 00 for empty location,
 	 * 10 for white stone, 11 for black stone (in binary)
 	 * @param location location of stone
@@ -145,6 +146,9 @@ public abstract class AbstractBoard {
 		rtolDiag[rtolIndex] = origRtoLDiag;
 
 //		zobristHash = Zobrist.zobristHash(location, first, zobristHash);
+
+        // After everything gets updated, update heuristics as well.
+        updateHeuristics(location);
 		return true;
 	}
 	
@@ -168,6 +172,7 @@ public abstract class AbstractBoard {
 		// Reset hash and clear move sequences.
 		zobristHash = 0;
 		moveSequence.clear();
+		// TODO clear cached stuffs
 	}
 	
 	public void render() {
@@ -195,7 +200,12 @@ public abstract class AbstractBoard {
 			System.out.println();
 		}
 	}
-	
+
+    /**
+     * Deprecated, use <code>getHeuristics</code> instead
+     * @return
+     */
+	@Deprecated
 	public int evaluateBoard() {
 		return evaluateBoardPV(true) - evaluateBoardPV(false);
 	}
@@ -218,17 +228,16 @@ public abstract class AbstractBoard {
 	}
 
     /**
+     * CORE FUNCTION
      * Update board heuristics and line heuristics; called after update board or withdraw move.
-     * @param move the most recent move (either to update or withdraw)
-     * @param isFirst whether or not black made this move (or withdraw)
-     * @param isUpdate set to true if this is an update, false if withdraw
+     * @param lastMove the most recent move (either to update or withdraw)
      */
-	private void updateHeuristics(int move, boolean isFirst, boolean isUpdate) {
+	private void updateHeuristics(int lastMove) {
 	    // TODO things to consider: what if after withdrawal the composite pattern is gone? -- solved
-	    int rowIndex = move / width;
-	    int colIndex = move % width;
-	    int ltorDiagIndex = getltorDiagIndex(move);
-	    int rtolDiagIndex = getrtolDiagIndex(move);
+	    int rowIndex = lastMove / width;
+	    int colIndex = lastMove % width;
+	    int ltorDiagIndex = getltorDiagIndex(lastMove);
+	    int rtolDiagIndex = getrtolDiagIndex(lastMove);
 
 	    // Evaluate for black
 	    int[] rowBlack = new int[2];
@@ -273,20 +282,20 @@ public abstract class AbstractBoard {
         whiteThree[rowIndex] = rowWhite[0];
         whiteThree[height + colIndex] = colWhite[0];
         whiteThree[width + height + ltorDiagIndex] = ltorWhite[0];
-        whiteThree[2*width + 2*height + rtolDiagIndex] = rtolWhite[0];
+        whiteThree[2*width + 2*height - 1 + rtolDiagIndex] = rtolWhite[0];
         whiteFour[rowIndex] = rowWhite[1];
         whiteFour[height + colIndex] = colWhite[1];
         whiteFour[width + height + ltorDiagIndex] = ltorWhite[1];
-        whiteFour[2*width + 2*height + rtolDiagIndex] = rtolWhite[1];
+        whiteFour[2*width + 2*height - 1 + rtolDiagIndex] = rtolWhite[1];
 
         blackThree[rowIndex] = rowBlack[0];
         blackThree[height + colIndex] = colBlack[0];
         blackThree[width + height + ltorDiagIndex] = ltorBlack[0];
-        blackThree[2*width + 2*height + rtolDiagIndex] = rtolBlack[0];
+        blackThree[2*width + 2*height - 1 + rtolDiagIndex] = rtolBlack[0];
         blackFour[rowIndex] = rowBlack[1];
         blackFour[height + colIndex] = colBlack[1];
         blackFour[width + height + ltorDiagIndex] = ltorBlack[1];
-        blackFour[2*width + 2*height + rtolDiagIndex] = rtolBlack[1];
+        blackFour[2*width + 2*height  - 1+ rtolDiagIndex] = rtolBlack[1];
 
         // TODO update board heuristics as well as totals (3&4)
         totWhiteThree = totWhiteThree - whiteOrigTotThree + whiteCurTotThree;
@@ -307,9 +316,6 @@ public abstract class AbstractBoard {
 	
 	private int evaluateBoardPV(boolean first) {
 		int curScore = 0;
-		// hasnone - 0, has3 - 1, has4 - 2; has33 - 3
-		// has34 or has44 - 4
-		int curStatus = 0;
 		int[] kind = new int[]{0, 0};
 		for (int i = 0; i < rowBased.length; i++) {
 			curScore += evaluateLine(rowBased[i], width, first, kind);
@@ -338,47 +344,47 @@ public abstract class AbstractBoard {
 		
 		return curScore;
 	}
-	
+
+    /**
+     * CORE FUNCTION
+     * Get current heuristics, taking into consideration of composite patterns
+     * @return
+     */
+	public int getHeuristics() {
+        int whiteOffset = 0;
+        int blackOffset = 0;
+        if (totWhiteFour >= 2) {
+            whiteOffset = four_four;
+        } else if (totWhiteFour >= 1 && totWhiteThree >= 1) {
+            whiteOffset = three_four;
+        } else if (totWhiteThree >= 2) {
+            whiteOffset = three_three;
+        }
+
+        if (totBlackFour >= 2) {
+            blackOffset = four_four;
+        } else if (totBlackFour >= 1 && totBlackThree >= 1) {
+            blackOffset = three_four;
+        } else if (totBlackThree >= 2) {
+            blackOffset = three_three;
+        }
+
+        return curHeuristic - whiteOffset + blackOffset;
+    }
+
+    /**
+     * Get increment in heuristics after move is played
+     * @param move move to play
+     * @param first whether or not black plays the move
+     * @return increment in heuristics
+     */
 	public int getInc(int move, boolean first) {
-		// TODO Pay attention to composite patterns
-        // TODO after caching the heuristic values, update this as well
-		int prevTotal = 0;
-		int postTotal = 0;
-		int rowIdx = move / width;
-		int colIdx = move % width;
-		int ltorIdx = getltorDiagIndex(move);
-		int rtolIdx = getrtolDiagIndex(move);
-		prevTotal += evaluateLine(rowBased[rowIdx], width, first, new int[]{0});
-		prevTotal += evaluateLine(colBased[colIdx], height, first, new int[]{0});
-		prevTotal += evaluateLine(ltorDiag[ltorIdx], Math.min(ltorIdx + 1, width + 
-				height - 1 - ltorIdx), first, new int[]{0});
-		prevTotal += evaluateLine(rtolDiag[rtolIdx], Math.min(rtolIdx + 1, width + 
-				height - 1 - rtolIdx), first, new int[]{0});
-		
-		prevTotal -= evaluateLine(rowBased[rowIdx], width, !first, new int[]{0});
-		prevTotal -= evaluateLine(colBased[colIdx], height, !first, new int[]{0});
-		prevTotal -= evaluateLine(ltorDiag[ltorIdx], Math.min(ltorIdx + 1, width + 
-				height - 1 - ltorIdx), !first, new int[]{0});
-		prevTotal -= evaluateLine(rtolDiag[rtolIdx], Math.min(rtolIdx + 1, width + 
-				height - 1 - rtolIdx), !first, new int[]{0});
-		
+        int prevHeu = getHeuristics();
 		updateBoard(move, first);
-		postTotal += evaluateLine(rowBased[rowIdx], width, first, new int[]{0});
-		postTotal += evaluateLine(colBased[colIdx], height, first, new int[]{0});
-		postTotal += evaluateLine(ltorDiag[ltorIdx], Math.min(ltorIdx + 1, width + 
-				height - 1 - ltorIdx), first, new int[]{0});
-		postTotal += evaluateLine(rtolDiag[rtolIdx], Math.min(rtolIdx + 1, width + 
-				height - 1 - rtolIdx), first, new int[]{0});
-		
-		postTotal -= evaluateLine(rowBased[rowIdx], width, !first, new int[]{0});
-		postTotal -= evaluateLine(colBased[colIdx], height, !first, new int[]{0});
-		postTotal -= evaluateLine(ltorDiag[ltorIdx], Math.min(ltorIdx + 1, width + 
-				height - 1 - ltorIdx), !first, new int[]{0});
-		postTotal -= evaluateLine(rtolDiag[rtolIdx], Math.min(rtolIdx + 1, width + 
-				height - 1 - rtolIdx), !first, new int[]{0});
+		int postHeu = getHeuristics();
 		withdrawMove(move);
 		
-		return postTotal - prevTotal;
+		return first ? postHeu - prevHeu : prevHeu - postHeu;
 	}
 
 	private static int evaluateLineNoBrainer(int line, int numPos, boolean first) {
@@ -444,7 +450,8 @@ public abstract class AbstractBoard {
 		// If less than 5 positions, no value
 		if (numPos < 5)
 			return 0;
-		
+
+		// Long-existing bug: If the line hits the cache, then there's no way to tell its critical kinds!!!
 		Integer cached = first ? evalMapsBlack.get(numPos).get(line) :
 			evalMapsWhite.get(numPos).get(line);
 		if (cached != null)
@@ -736,7 +743,13 @@ public abstract class AbstractBoard {
 			return rowIndex * width + colIndex;
 		}
 	}
-	
+
+    /**
+     * CORE FUNCTION
+     * Withdraws the given move
+     * PRE-CONDITION: move is already on the board
+     * @param move
+     */
 	public void withdrawMove(int move) {
 		if (move < 0 || move >= width * height)
 			return;
@@ -757,6 +770,9 @@ public abstract class AbstractBoard {
 		colBased[colIndex] &= (-1 - (3 << (rowIndex * 2)));
 		rtolDiag[rtolIdx] &= (-1 - (3 << (indexOnRtoLDiag * 2)));
 		ltorDiag[ltorIdx] &= (-1 - (3 << (indexOnLtoRDiag * 2)));
+
+		// After proper withdrawal, update heuristics as well
+        updateHeuristics(move);
 	}
 	
 	public boolean checkWinningLite(int move, boolean first) {

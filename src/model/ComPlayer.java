@@ -8,8 +8,8 @@ public class ComPlayer extends AbstractPlayer {
 	private UnrestrictedBoard gameBoard;
 	private boolean isComFirst;
 	private Difficulty diff;
-	int oscillation = 0;
-	int selectionThreshold = -1;
+	private int oscillation = 0;
+	private int selectionThreshold = -1;
 
 	ComPlayer(UnrestrictedBoard bd, boolean isComFirst, Difficulty diff) {
 		gameBoard = bd;

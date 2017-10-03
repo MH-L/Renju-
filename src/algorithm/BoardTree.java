@@ -50,14 +50,14 @@ public class BoardTree {
 
 		if (depth == 0) {
 			nodesNum++;
-			value[0] = bd.evaluateBoard();
+			value[0] = bd.getHeuristics();
 			return -1;
 		}
 		
 		if ((lastMove >= 0 && bd.checkWinningLite(lastMove, !maximizing)) || 
 				bd.someoneWins()) {
 			nodesNum++;
-			value[0] = bd.evaluateBoard();
+			value[0] = bd.getHeuristics();
 			return -1;
 		}
 		
@@ -95,7 +95,7 @@ public class BoardTree {
 		
 		if (nextMoves.isEmpty()) {
 			if (bd.boardFull()) {
-				value[0] = bd.evaluateBoard();
+				value[0] = bd.getHeuristics();
 				return -1;
 			} else {
 				return bd.getFirstRandomMove();
@@ -187,14 +187,14 @@ public class BoardTree {
 
 		if (depth == 0) {
 			nodesNum++;
-			value[0] = bd.evaluateBoard();
+			value[0] = bd.getHeuristics();
 			return -1;
 		}
 		
 		if ((lastMove >= 0 && bd.checkWinningLite(lastMove, !maximizing)) || 
 				bd.someoneWins()) {
 			nodesNum++;
-			value[0] = bd.evaluateBoard();
+			value[0] = bd.getHeuristics();
 			return -1;
 		}
 		
@@ -226,7 +226,7 @@ public class BoardTree {
 		// Sort next move based on increment of heuristic value
 		if (nextMoves.isEmpty()) {
 			if (bd.boardFull()) {
-				value[0] = bd.evaluateBoard();
+				value[0] = bd.getHeuristics();
 				return -1;
 			} else {
 				return bd.getFirstRandomMove();
@@ -320,7 +320,10 @@ public class BoardTree {
 					break;
 			}
 		}
-		
+
+		if (levelToRoot == 0) {
+            System.out.println("Board evaluation: " + bd.getHeuristics() + ", increment: " + bd.getInc(bestMove, maximizing));
+        }
 		return bestMove;
 	}
 	

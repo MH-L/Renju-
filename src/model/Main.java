@@ -149,7 +149,7 @@ public class Main {
             public void actionPerformed(ActionEvent e) {
                 UnrestrictedCvCGame experiment = new UnrestrictedCvCGame(new UnrestrictedBoard(),
                         Difficulty.custom, Difficulty.custom);
-                experiment.setCustomAIParams(3, 3);
+                experiment.setCustomAIParams(3, 0);
                 experiment.runCvCGameForRecord(10000);
             }
         });
