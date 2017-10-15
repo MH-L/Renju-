@@ -386,6 +386,7 @@ public class Main {
 				else if (ultimateDiffOption.isSelected())
 					game = new UnrestrictedGame(turnPolicy, Difficulty.ultimate);
 				else if (mysteriousButton.isSelected()) {
+
 					game = new UnrestrictedGame(turnPolicy, Difficulty.custom);
 				}
 				else {

@@ -8,8 +8,6 @@ import storage.LocalStorage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-//import org.junit.Before;
-//import org.junit.Test;
 
 public class ZobristTest {
     AbstractBoard bd1;
@@ -37,8 +35,10 @@ public class ZobristTest {
         LocalStorage.writeInitialSeed();
         Main.machineLearningSetup();
         UnrestrictedCvCGame experiment = new UnrestrictedCvCGame(new UnrestrictedBoard(),
-                AbstractGame.Difficulty.custom, AbstractGame.Difficulty.custom);
-        experiment.setCustomAIParams(3, 3);
+                AbstractGame.Difficulty.custom, AbstractGame.Difficulty.ultimate);
+
+        // TODO after controlling experiment change it back
+        experiment.setCustomAIParams(3, 0);
         experiment.runCvCGameForRecord(100000);
 //        experiment.runCvCGameForRecord(10);
 //        System.out.println("Executing command in linux...");

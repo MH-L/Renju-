@@ -37,7 +37,7 @@ public class BoardTreeTest {
 		bd.updateBoard(145, false);
 		bd.withdrawMove(145);
 		bd.render();
-		System.out.println(bd.evaluateBoard());
+		System.out.println(bd.getHeuristics());
 		int move = BoardTree.alphaBeta(bd, 4, Integer.MIN_VALUE, 
 				Integer.MAX_VALUE, true);
 		System.out.println(move);
@@ -137,6 +137,18 @@ public class BoardTreeTest {
 		System.out.println(BoardTree.alphaBeta(bd, 6, Integer.MIN_VALUE, Integer.MAX_VALUE, 
 				false));
 	}
+
+	@Test
+    public void testFindingThrees() {
+	    List<Integer> xcoord = Arrays.asList(11, 8, 7, 6, 8, 8, 9, 9, 10, 7);
+	    List<Integer> ycoord = Arrays.asList(4, 6, 7, 9, 8, 9, 8, 9, 10, 10);
+	    updateBoardInBatch(bd, ycoord, xcoord, true);
+	    xcoord = Arrays.asList(9, 10, 6, 7, 8, 9, 7, 11, 7, 11, 4);
+	    ycoord = Arrays.asList(5, 5, 6, 6, 7, 6, 8, 11, 9, 6, 13);
+	    updateBoardInBatch(bd, ycoord, xcoord, false);
+	    bd.render();
+	    System.out.println(BoardTree.alphaBeta(bd, 7, Integer.MIN_VALUE, Integer.MAX_VALUE, false));
+    }
 	
 	private void updateBoardInBatch(AbstractBoard bd, List<Integer> ycoord, 
 			List<Integer> xcoord, boolean first) {
@@ -174,10 +186,10 @@ public class BoardTreeTest {
 		Main.machineLearningSetup();
 		bd.render();
 		int[] value = new int[] {0};
-        System.out.println(BoardTree.alphaBetaCustom(bd, 8, Integer.MIN_VALUE, Integer.MAX_VALUE, false, value,98, 3,3,0));
+        System.out.println(BoardTree.alphaBetaCustom(bd, 8, Integer.MIN_VALUE, Integer.MAX_VALUE, false, value,98, 3,3,0, false));
         System.out.println("Final output value: " + value[0]);
         value[0] = 0;
-        System.out.println(BoardTree.alphaBetaMem(bd, 4, Integer.MIN_VALUE, Integer.MAX_VALUE, false, value, 0));
+        System.out.println(BoardTree.alphaBetaMem(bd, 4, Integer.MIN_VALUE, Integer.MAX_VALUE, false, value, 0, 0, false));
         System.out.println("Final output value from mem: " + value[0]);
 	}
 }

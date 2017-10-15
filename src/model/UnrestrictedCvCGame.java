@@ -114,6 +114,8 @@ public class UnrestrictedCvCGame extends AbstractGame {
 
 	private int runCvCGameNoGraphics() {
 	    activePlayer = true;
+	    // TODO get rid of the logs after improvement of the AI
+	    long curTime = System.currentTimeMillis();
 		while (true) {
 			int moveResult = 0;
 			if (activePlayer) {
@@ -141,6 +143,12 @@ public class UnrestrictedCvCGame extends AbstractGame {
                     moveResult = 3;
                 }
             }
+            System.out.println(String.format("Total Evals: %s, Uncached Evals: %s, Time: %s, Nodes: %s", AbstractBoard.totalEvals,
+                    AbstractBoard.totalEvals - AbstractBoard.cachedEvals, System.currentTimeMillis() - curTime, BoardTree.nodesNum));
+			curTime = System.currentTimeMillis();
+			AbstractBoard.totalEvals = 0;
+			AbstractBoard.cachedEvals = 0;
+			BoardTree.nodesNum = 0;
 
 			if (moveResult != 0) {
 			    // TODO refactor this into abstract board class.

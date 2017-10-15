@@ -100,7 +100,7 @@ public class LocalStorage {
 		File recordDirFile = new File(recordDirPath);
 		// TODO Find a file that is not too big; if no file found, create one
 		File[] recordList = recordDirFile.listFiles();
-		PrintWriter pr = new PrintWriter(new FileWriter(recordDirPath + "record013_sver.txt", true));
+		PrintWriter pr = new PrintWriter(new FileWriter(recordDirPath + "record017_test.txt", true));
 		pr.print(gameMoves.get(0));
 		for (int i = 1; i < gameMoves.size(); i++) {
 			pr.print("|" + gameMoves.get(i));

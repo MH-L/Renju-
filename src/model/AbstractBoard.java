@@ -15,6 +15,10 @@ import java.util.Random;
 import java.util.Set;
 
 public abstract class AbstractBoard {
+    // TODO remove this after mature
+    public static long totalEvals = 0;
+    public static long cachedEvals = 0;
+
 	public static final int width = 15;
 	public static final int height = 15;
 	protected static final int invalid_location = 225;
@@ -76,7 +80,22 @@ public abstract class AbstractBoard {
 	protected Random rng;
 	public static List<Map<Integer, Integer>> evalMapsBlack;
 	public static List<Map<Integer, Integer>> evalMapsWhite;
+	private static List<Map<Integer, Byte>> criticalMapsWhite;
+	private static List<Map<Integer, Byte>> criticalMapsBlack;
 	private List<Integer> moveSequence;
+
+	static {
+        evalMapsBlack = new ArrayList<>(width + 1);
+        evalMapsWhite = new ArrayList<>(width + 1);
+        criticalMapsBlack = new ArrayList<>(width + 1);
+        criticalMapsWhite = new ArrayList<>(width + 1);
+        for (int i = 0; i <= width; i++) {
+            evalMapsBlack.add(new HashMap<>());
+            evalMapsWhite.add(new HashMap<>());
+            criticalMapsBlack.add(new HashMap<>());
+            criticalMapsWhite.add(new HashMap<>());
+        }
+    }
 	
 	public AbstractBoard() {
 		rng = new Random();
@@ -95,12 +114,6 @@ public abstract class AbstractBoard {
         blackFour = new int[3*width + 3*height - 2];
 		adjacentMap = new HashMap<>();
 		adjacentMapRed = new HashMap<>();
-		evalMapsBlack = new ArrayList<>(width + 1);
-		evalMapsWhite = new ArrayList<>(width + 1);
-		for (int i = 0; i <= width; i++) {
-			evalMapsBlack.add(new HashMap<>());
-			evalMapsWhite.add(new HashMap<>());
-		}
 		generateAdjacentMoves();
 		genAdjMovesReduced();
 	}
@@ -203,7 +216,7 @@ public abstract class AbstractBoard {
 
     /**
      * Deprecated, use <code>getHeuristics</code> instead
-     * @return
+     * @return Board heuristics
      */
 	@Deprecated
 	public int evaluateBoard() {
@@ -451,11 +464,19 @@ public abstract class AbstractBoard {
 		if (numPos < 5)
 			return 0;
 
+		totalEvals++;
+
 		// Long-existing bug: If the line hits the cache, then there's no way to tell its critical kinds!!!
+        // TODO this should really bring up my attention
 		Integer cached = first ? evalMapsBlack.get(numPos).get(line) :
 			evalMapsWhite.get(numPos).get(line);
-		if (cached != null)
-			return cached;
+		if (cached != null) {
+		    byte entry = first ? criticalMapsBlack.get(numPos).get(line) : criticalMapsWhite.get(numPos).get(line);
+		    criticalKind[0] = entry % 4;
+		    criticalKind[1] = entry / 4;
+		    cachedEvals++;
+            return cached;
+        }
 		
 		String base4Str = Integer.toString(line, 4);
 		while (base4Str.length() < numPos) {
@@ -595,10 +616,14 @@ public abstract class AbstractBoard {
 		curScore += openTwoCount * open_two + smallJumpTwoCount * small_jump_two
 				+ bigJumpTwoCount * big_jump_two;
 		
-		if (first)
-			evalMapsBlack.get(numPos).put(line, curScore);
-		else
-			evalMapsWhite.get(numPos).put(line, curScore);
+		if (first) {
+            evalMapsBlack.get(numPos).put(line, curScore);
+            criticalMapsBlack.get(numPos).put(line, (byte) (criticalKind[0] + criticalKind[1] * 4));
+        }
+		else {
+            evalMapsWhite.get(numPos).put(line, curScore);
+            criticalMapsWhite.get(numPos).put(line, (byte) (criticalKind[0] + criticalKind[1] * 4));
+        }
 		return curScore;
 	}
 	
@@ -998,6 +1023,8 @@ public abstract class AbstractBoard {
 	 * @return
 	 */
 	public Set<Integer> findAllThrees(boolean first) {
+	    // TODO BUGGY FUNCTION!!!
+        // TODO after debugging please don't iterate through all lines, use the last move please!
 		Set<Integer> retVal = new HashSet<>();
 		for (int i = 0; i < rowBased.length; i++) {
 			Set<Integer> res = findThree(getBase4Str(rowBased[i], width), first);
@@ -1046,6 +1073,8 @@ public abstract class AbstractBoard {
 		char selfCh = first ? '3' : '2';
 		char oppCh = first ? '2' : '3';
 		char empty = '0';
+
+		// Keep track of the set of empty locations
 		Set<Integer> empLocSet = new HashSet<>();
 		for (int i = 0; i < 6; i++) {
 			char ch = line.charAt(i);
@@ -1080,39 +1109,42 @@ public abstract class AbstractBoard {
 				selfCnt ++;
 			else if (front == empty) {
 				empCnt ++;
-				empLocSet.add(i);
+				empLocSet.add(j);
 			}
-			
+
+			// TODO jump three not detected?
 			// Two ends empty; meets criteria
-			if (empLocSet.contains(i + 1) && empLocSet.contains(j)) {
+			if (selfCnt == 3 && empCnt == 3 && empLocSet.contains(i + 1) && empLocSet.contains(j)) {
 				// First check the boundary
 				if (j == line.length() - 1) {
 					if (empLocSet.contains(j - 1)) {
 						retVal.add(i + 1);
 						retVal.add(j - 1);
 					} else retVal.addAll(empLocSet);
-				} else if (line.charAt(i) == oppCh) {
+				} else if (line.charAt(i) == oppCh) { // blocked in the front
 					if (line.charAt(j + 1) == oppCh) {
 						// two sides blocked, add all;
 						retVal.addAll(empLocSet);
 					} else if (empLocSet.contains(i + 2)) {
 						retVal.add(i + 2);
 						retVal.add(j);
-					} else retVal.addAll(empLocSet);
-				} else if (line.charAt(j + 1) == oppCh) {
+					} else if (empLocSet.contains(j - 1)) {
+					    retVal.addAll(empLocSet);
+                    } else retVal.addAll(empLocSet);
+				} else if (line.charAt(j + 1) == oppCh) { // blocked in the back but open in the front
 					if (empLocSet.contains(j - 1)) {
 						retVal.add(j - 1);
 						retVal.add(i + 1);
 					} else {
 						retVal.addAll(empLocSet);
 					}
-				} else {
-					if (empLocSet.contains(i + 1)) {
-						retVal.add(i + 1);
+				} else { // open on both sides
+					if (empLocSet.contains(i + 2)) {
+						retVal.add(i + 2);
 						retVal.add(j);
 					} else if (empLocSet.contains(j - 1)) {
 						retVal.add(j - 1);
-						retVal.add(i);
+						retVal.add(i + 1);
 					} else retVal.addAll(empLocSet);
 				}
 			}

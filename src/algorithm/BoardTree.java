@@ -10,15 +10,15 @@ import java.util.Random;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.sun.org.apache.xpath.internal.SourceTree;
 import model.AbstractBoard;
 import model.UnrestrictedBoard;
 
 public class BoardTree {
-	public static int nodesNum = 0;
+	public static long nodesNum = 0;
 	private static final int MAX_BIAS = 50;
 	public static Map<Long, StatObj> statMap = new HashMap<>();
 	public static Set<Long> cachedLocs = new HashSet<>();
+	private static int[] branchingControl = {100, 12, 9, 7, 6, 5, 5, 5, 4, 4, 3, 3, 3, 3, 3, 3};
 
 	// Meant to distinguish calls from outside from recursive calls.
 	public static final int SPECIAL_HEURISTIC = 1000000001;
@@ -35,11 +35,11 @@ public class BoardTree {
 	 */
 	public static int alphaBeta(UnrestrictedBoard bd, int depth, int alpha, 
 			int beta, boolean maximizing) {
-		return alphaBetaMem(bd, depth, alpha, beta, maximizing, new int[]{SPECIAL_HEURISTIC}, -1);
+		return alphaBetaMem(bd, depth, alpha, beta, maximizing, new int[]{SPECIAL_HEURISTIC}, -1, 0, true);
 	}
 	
 	public static int alphaBetaMem(UnrestrictedBoard bd, int depth, int alpha, 
-			int beta, boolean maximizing, int[] value, int lastMove) {
+			int beta, boolean maximizing, int[] value, int lastMove, int proceededDepth, boolean useControl) {
 	    if (cachedLocs.contains(bd.getZobristHash()) && value[0] != SPECIAL_HEURISTIC) {
             value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
             return -1;
@@ -75,7 +75,7 @@ public class BoardTree {
 		if (lastMove >= 0 && bd.formedThreat(!maximizing, lastMove, blocking)) {
 			int onlyMove = blocking[0];
 			bd.updateBoard(onlyMove, maximizing);
-			alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, onlyMove);
+			alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, onlyMove, proceededDepth + 1, useControl);
 			bd.withdrawMove(onlyMove);
 			return onlyMove;
 		}
@@ -86,6 +86,8 @@ public class BoardTree {
 			Map<Integer, Integer> thLocations = bd.findThreatLocation(maximizing);
 			nextMoves = allThrees;
 			nextMoves.addAll(thLocations.keySet());
+			if (proceededDepth == 0)
+                System.out.println("opponent has threes: " + allThrees.size());
 		} else {
 			nextMoves = bd.nextMoves();
 		}
@@ -108,7 +110,7 @@ public class BoardTree {
 			int inc = bd.getInc(mv, maximizing);
 			// TODO best-looking moves are checked (Allis, 1994)
 			// TODO inc function might be buggy
-			if (inc > 3) {
+			if (inc >= 0) {
 				nmsorted.add(mv);
 				incMap.put(mv, inc);
 			}
@@ -138,10 +140,15 @@ public class BoardTree {
 		int bestMove = -1;
 		if (maximizing) {
 			int maxVal = Integer.MIN_VALUE;
+			int count = 0;
 			for (int move : nmsorted) {
+			    if (useControl && count > branchingControl[proceededDepth])
+			        // Branching control kicks in
+                    break;
+			    count++;
 				bd.updateBoard(move, maximizing);
 				nodesNum++;
-				alphaBetaMem(bd, depth-1, alpha, beta, !maximizing, value, move);
+				alphaBetaMem(bd, depth-1, alpha, beta, !maximizing, value, move, proceededDepth + 1, useControl);
 				if (value[0] > maxVal) {
 					maxVal = value[0];
 					bestMove = move;
@@ -156,10 +163,15 @@ public class BoardTree {
 			value[0] = maxVal;
 		} else {
 			int minVal = Integer.MAX_VALUE;
+			int count = 0;
 			for (int move : nmsorted) {
+                if (useControl && count > branchingControl[proceededDepth])
+                    // Branching control kicks in
+                    break;
+			    count++;
 				bd.updateBoard(move, maximizing);
 				nodesNum++;
-				alphaBetaMem(bd, depth-1, alpha, beta, !maximizing, value, move);
+				alphaBetaMem(bd, depth-1, alpha, beta, !maximizing, value, move, proceededDepth + 1, useControl);
 				if (value[0] < minVal) {
 					minVal = value[0];
 					bestMove = move;
@@ -167,7 +179,7 @@ public class BoardTree {
 				bd.withdrawMove(move);
 				beta = Math.min(beta, minVal);
 				if (beta <= alpha)
-					break;
+                    break;
 			}
 			
 			value[0] = minVal;
@@ -178,11 +190,11 @@ public class BoardTree {
 	
 	public static int alphaBetaCustom(UnrestrictedBoard bd, int depth, int alpha, 
 			int beta, boolean maximizing, int[] value, int lastMove, 
-			int evalOscillation, int selectionThreshold, int levelToRoot) {
+			int evalOscillation, int selectionThreshold, int levelToRoot, boolean useControl) {
         if (cachedLocs.contains(bd.getZobristHash()) && levelToRoot != 0) {
             value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
             System.out.println("This is saved by me.");
-            return -1; // return value doesn't matter here, since it is not the root node (levelToRoot != 0)s
+            return -1; // return value doesn't matter here, since it is not the root node (levelToRoot != 0)
         }
 
 		if (depth == 0) {
@@ -208,7 +220,7 @@ public class BoardTree {
 		if (lastMove >= 0 && bd.formedThreat(!maximizing, lastMove, blocking)) {
 			int onlyMove = blocking[0];
 			bd.updateBoard(onlyMove, maximizing);
-			alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, onlyMove);
+			alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, onlyMove, 1, useControl);
 			bd.withdrawMove(onlyMove);
 			return onlyMove;
 		}
@@ -219,7 +231,8 @@ public class BoardTree {
 			Map<Integer, Integer> thLocations = bd.findThreatLocation(maximizing);
 			nextMoves = allThrees;
 			nextMoves.addAll(thLocations.keySet());
-		} else {
+            System.out.println("opponent has threes: " + allThrees.size());
+        } else {
 			nextMoves = bd.getStoneCount() > 3 ? bd.nextMoves() : bd.nextMovesRed();
 		}
 		
@@ -238,7 +251,7 @@ public class BoardTree {
 		for (int mv : nextMoves) {
 			int inc = bd.getInc(mv, maximizing);
 			if (inc >= selectionThreshold) {
-				nmsorted.add(mv);
+                nmsorted.add(mv);
 				incMap.put(mv, inc);
 			}
 		}
@@ -264,20 +277,22 @@ public class BoardTree {
 			return nmsorted.get(0);
 		}
 
-		// TODO add oscillation only to the first layer
+		// TODO implement quiescent search here
+        // Things to consider: what if the optimal move isn't on principal variation?
 		int bestMove = -1;
 		if (maximizing) {
 			// case for black
 			int maxVal = Integer.MIN_VALUE;
 			for (int move : nmsorted) {
-				bd.updateBoard(move, maximizing);
+                System.out.println("Current move inc: " + incMap.get(move));
+                bd.updateBoard(move, maximizing);
 				bd.updateHash(move, maximizing);
 				nodesNum++;
 //				alphaBetaCustom(bd, depth-1, alpha, beta, !maximizing, value, move, evalOscillation, selectionThreshold, levelToRoot + 1);
-				alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, move);
+				alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, move, 1, useControl);
 				if (levelToRoot == 0) {
 				    // sway the value
-				    value[0] = value[0] + new Random().nextInt(2*evalOscillation + 1) - evalOscillation;
+                    value[0] = value[0] + new Random().nextInt(2*evalOscillation + 1) - evalOscillation;
 				    if (bd.getStoneCount() > 3)
 				        value[0] = value[0] + getBias(bd.getZobristHash());
                 }
@@ -285,8 +300,10 @@ public class BoardTree {
 					maxVal = value[0];
 					bestMove = move;
 				}
-				
+
+                System.out.println("After oscillation: " + value[0]);
 				bd.withdrawMove(move);
+                System.out.println("Cur move heu: " + value[0]);
 				// Just re-apply XOR operation to restore the hash.
 				bd.updateHash(move, maximizing);
 				alpha = Math.max(alpha, maxVal);
@@ -297,18 +314,21 @@ public class BoardTree {
 			// case for white
 			int minVal = Integer.MAX_VALUE;
 			for (int move : nmsorted) {
+                System.out.println("Current move inc: " + incMap.get(move));
 				bd.updateBoard(move, maximizing);
                 bd.updateHash(move, maximizing);
 				nodesNum++;
 //				alphaBetaCustom(bd, depth-1, alpha, beta, !maximizing, value, move, evalOscillation, selectionThreshold, levelToRoot + 1);
-				alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, move);
+				alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, move, 1, useControl);
 				if (levelToRoot == 0) {
                     // sway the value
                     value[0] = value[0] + new Random().nextInt(2*evalOscillation + 1) - evalOscillation;
                     if (bd.getStoneCount() > 2)
                         value[0] = value[0] + getBias(bd.getZobristHash());
                 }
-				if (value[0] < minVal) {
+
+                System.out.println("After oscillation: " + value[0]);
+                if (value[0] < minVal) {
 					minVal = value[0];
 					bestMove = move;
 				}
@@ -316,7 +336,8 @@ public class BoardTree {
 				// ditto
                 bd.updateHash(move, maximizing);
 				beta = Math.min(beta, minVal);
-				if (beta <= alpha)
+                System.out.println("Cur move heu: " + value[0]);
+                if (beta <= alpha)
 					break;
 			}
 		}
@@ -429,6 +450,10 @@ public class BoardTree {
             return 0;
         }
         StatObj obj = statMap.get(boardHash);
+
+	    // TODO not using bias now
+	    if (true)
+	        return 0;
 	    return getBiasFromHistory(obj.getWinRate(), obj.getLossRate(), obj.getSupport());
     }
 
