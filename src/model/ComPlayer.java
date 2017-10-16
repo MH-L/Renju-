@@ -86,8 +86,8 @@ public class ComPlayer extends AbstractPlayer {
                 return blocking[0];
             }
 
-            return BoardTree.alphaBetaCustom(gameBoard, 7, Integer.MIN_VALUE,
-                    Integer.MAX_VALUE, isComFirst, new int[]{0}, lastMove, oscillation, selectionThreshold, 0, false);
+            return BoardTree.alphaBetaCustom(gameBoard, 15, Integer.MIN_VALUE,
+                    Integer.MAX_VALUE, isComFirst, new int[]{0}, lastMove, oscillation, selectionThreshold, 0, true);
 		default:
 			blocking = new int[]{0};
 			threatSearch = BoardTree.threatSpaceSearchV2(gameBoard, 25, isComFirst, blocking, new int[]{0});

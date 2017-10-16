@@ -14,7 +14,7 @@ public class LocalStorage {
 	private static final int MAX_BUFFER_SIZE = 30;
 	private static Set<Long> buffer = new HashSet<>();
 
-	private static String getGameStorageBaseDir() {
+	public static String getGameStorageBaseDir() {
 		String homeDir = System.getProperty("user.home");
 		return homeDir + File.separator + "Documents" + File.separator + "programming" + File.separator +
 				"persistentStorage" + File.separator + "Renju" + File.separator;
@@ -100,7 +100,7 @@ public class LocalStorage {
 		File recordDirFile = new File(recordDirPath);
 		// TODO Find a file that is not too big; if no file found, create one
 		File[] recordList = recordDirFile.listFiles();
-		PrintWriter pr = new PrintWriter(new FileWriter(recordDirPath + "record017_test.txt", true));
+		PrintWriter pr = new PrintWriter(new FileWriter(recordDirPath + "record019_debug.txt", true));
 		pr.print(gameMoves.get(0));
 		for (int i = 1; i < gameMoves.size(); i++) {
 			pr.print("|" + gameMoves.get(i));
@@ -153,6 +153,10 @@ public class LocalStorage {
 	 */
 	public static void updateGameStats(Difficulty diff, int result, boolean isFirst)
 			throws IOException {
+
+	    // Don't record stats for custom difficulty
+	    if (diff == Difficulty.custom)
+	        return;
 		FileReader fr = new FileReader(getStatsFile());
 		BufferedReader br = new BufferedReader(fr);
 		String firstLine = br.readLine();

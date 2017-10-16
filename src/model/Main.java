@@ -20,6 +20,7 @@ import javax.swing.plaf.FontUIResource;
 import algorithm.BoardTree;
 import algorithm.Zobrist;
 import model.AbstractGame.Difficulty;
+import storage.EvalCache;
 import storage.LocalStorage;
 
 public class Main {
@@ -386,8 +387,7 @@ public class Main {
 				else if (ultimateDiffOption.isSelected())
 					game = new UnrestrictedGame(turnPolicy, Difficulty.ultimate);
 				else if (mysteriousButton.isSelected()) {
-
-					game = new UnrestrictedGame(turnPolicy, Difficulty.custom);
+					game = new UnrestrictedGame(turnPolicy, Difficulty.custom, 0, 0);
 				}
 				else {
 					// For "Even novice is too hard", we use random XDDDD

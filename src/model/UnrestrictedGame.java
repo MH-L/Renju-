@@ -30,6 +30,11 @@ public class UnrestrictedGame extends AbstractGame {
 		addGiveUpBtnListerner();
 		addHintBtnListener();
 	}
+
+	public UnrestrictedGame(int turnPolicy, Difficulty diff, int evalOscillation, int selectionThreshold) {
+	    this(turnPolicy, diff);
+	    setCustomAIParams(evalOscillation, selectionThreshold);
+    }
 	
 	public void addHintBtnListener() {
 		btnHint.addActionListener(new ActionListener() {
@@ -153,4 +158,8 @@ public class UnrestrictedGame extends AbstractGame {
 		
 		return 0;
 	}
+
+    public void setCustomAIParams(int oscillation, int selectionThreshold) {
+        com.setCustomParams(oscillation, selectionThreshold);
+    }
 }

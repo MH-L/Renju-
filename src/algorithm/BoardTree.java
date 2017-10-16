@@ -18,7 +18,7 @@ public class BoardTree {
 	private static final int MAX_BIAS = 50;
 	public static Map<Long, StatObj> statMap = new HashMap<>();
 	public static Set<Long> cachedLocs = new HashSet<>();
-	private static int[] branchingControl = {100, 12, 9, 7, 6, 5, 5, 5, 4, 4, 3, 3, 3, 3, 3, 3};
+	private static int[] branchingControl = {100, 15, 7, 6, 5, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
 
 	// Meant to distinguish calls from outside from recursive calls.
 	public static final int SPECIAL_HEURISTIC = 1000000001;

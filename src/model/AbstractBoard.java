@@ -1,6 +1,7 @@
 package model;
 
 import algorithm.Zobrist;
+import storage.EvalCache;
 import storage.LocalStorage;
 
 import java.io.IOException;
@@ -62,9 +63,11 @@ public abstract class AbstractBoard {
 	private int totBlackFour = 0;
 
 	// stores number of white threes in each line
+    // TODO here, add bit-shifting to represent the blocking locations
 	private int[] whiteThree;
 
 	// stores number of white fours in each line
+    // TODO here, add bit-shifting to represent the blocking locations
 	private int[] whiteFour;
 
 	// stores number of black threes in each line
@@ -96,8 +99,18 @@ public abstract class AbstractBoard {
             criticalMapsWhite.add(new HashMap<>());
         }
     }
+
+    private static void initializeCachedEvals() {
+	    EvalCache.initializeCache();
+	    for (int i = 5; i <= width; i++) {
+            // Initialize eval maps and critial maps using cache
+            evalMapsBlack.set(i, EvalCache.getEvalsPutCriticals(i, true, criticalMapsBlack.get(i)));
+            evalMapsWhite.set(i, EvalCache.getEvalsPutCriticals(i, false, criticalMapsWhite.get(i)));
+        }
+    }
 	
 	public AbstractBoard() {
+	    initializeCachedEvals();
 		rng = new Random();
 		moveSequence = new ArrayList<>();
 		rowBased = new int[height];
@@ -450,6 +463,10 @@ public abstract class AbstractBoard {
 	    return curScore;
     }
 
+    private static int evaluateLine(int line, int numPos, boolean first, int[] criticalKind) {
+	    return evaluateLine(line, numPos, first, criticalKind, true);
+    }
+
     /**
      * Get line heuristics as well as number of three/fours
      * @param line the line to evaluate
@@ -458,7 +475,7 @@ public abstract class AbstractBoard {
      * @param criticalKind must be int[2], first entry stores # of threes, and second stores # of fours
      * @return heuristic of the line
      */
-	private static int evaluateLine(int line, int numPos, boolean first, int[] criticalKind) {
+	public static int evaluateLine(int line, int numPos, boolean first, int[] criticalKind, boolean confidence) {
 		// TODO corner cases: pattern at the ends
 		// If less than 5 positions, no value
 		if (numPos < 5)
@@ -476,6 +493,8 @@ public abstract class AbstractBoard {
 		    criticalKind[1] = entry / 4;
 		    cachedEvals++;
             return cached;
+        } else if (confidence) {
+            return 0;
         }
 		
 		String base4Str = Integer.toString(line, 4);
@@ -1025,6 +1044,8 @@ public abstract class AbstractBoard {
 	public Set<Integer> findAllThrees(boolean first) {
 	    // TODO BUGGY FUNCTION!!!
         // TODO after debugging please don't iterate through all lines, use the last move please!
+        // TODO actually this is hard to do without framework support, but now that we have the framework, it's basically just caching more stuffs besides which lines
+        // TODO having threes or fours
 		Set<Integer> retVal = new HashSet<>();
 		for (int i = 0; i < rowBased.length; i++) {
 			Set<Integer> res = findThree(getBase4Str(rowBased[i], width), first);
@@ -1112,7 +1133,6 @@ public abstract class AbstractBoard {
 				empLocSet.add(j);
 			}
 
-			// TODO jump three not detected?
 			// Two ends empty; meets criteria
 			if (selfCnt == 3 && empCnt == 3 && empLocSet.contains(i + 1) && empLocSet.contains(j)) {
 				// First check the boundary
