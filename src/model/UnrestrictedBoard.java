@@ -1,6 +1,14 @@
 package model;
 
 public class UnrestrictedBoard extends AbstractBoard {
+	public UnrestrictedBoard() {
+		super();
+	}
+	
+	public UnrestrictedBoard(boolean initializeCache) {
+		super(initializeCache);
+	}
+	
 	public boolean someoneWins() {
 		// Check columns
 		for (int i = 0; i < width; i++) {

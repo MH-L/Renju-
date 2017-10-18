@@ -109,9 +109,14 @@ public abstract class AbstractBoard {
             evalMapsWhite.set(i, EvalCache.getEvalsPutCriticals(i, false, criticalMapsWhite.get(i)));
         }
     }
+    
+    public AbstractBoard() {
+    	this(true);
+    }
 	
-	public AbstractBoard() {
-	    initializeCachedEvals();
+	public AbstractBoard(boolean initializeCache) {
+		if (initializeCache)
+			initializeCachedEvals();
 		rng = new Random();
 		moveSequence = new ArrayList<>();
 		rowBased = new int[height];
@@ -584,7 +589,7 @@ public abstract class AbstractBoard {
             curScore += open_three;
             criticalKind[0]++;
         }
-        // Note that it's not impossible to have two jump_three's. E.g. xx_x_xx but that's effectively one cjump_three
+        // Note that it's not impossible to have two jump_three's. E.g. _xx_x_xx_ but that's effectively one cjump_three
         // since it's not a double threat (blockable with one piece)
 		else if (base4Str.contains(patJumpThree1) || base4Str.contains(patJumpThree2)) {
             curScore += jump_three;
@@ -635,24 +640,24 @@ public abstract class AbstractBoard {
 			bigJumpTwoCount ++;
 		}
 
-		startPos = 0;
-		int singleStoneCnt = 0;
-		while ((startPos = base4Str.indexOf(patSingleStone, startPos)) != -1) {
-		    startPos++;
-		    singleStoneCnt++;
-        }
-
-        startPos = 0;
-        while ((startPos = base4Str.indexOf(patSingleStone2, startPos)) != -1) {
-            startPos++;
-            singleStoneCnt++;
-        }
+//		startPos = 0;
+//		int singleStoneCnt = 0;
+//		while ((startPos = base4Str.indexOf(patSingleStone, startPos)) != -1) {
+//		    startPos++;
+//		    singleStoneCnt++;
+//        }
+//
+//        startPos = 0;
+//        while ((startPos = base4Str.indexOf(patSingleStone2, startPos)) != -1) {
+//            startPos++;
+//            singleStoneCnt++;
+//        }
 		
 		curScore += openTwoCount * open_two + smallJumpTwoCount * small_jump_two
 				+ bigJumpTwoCount * big_jump_two;
 
-		if (bigJumpTwoCount == 0)
-		    curScore += singleStoneCnt * single_stone;
+//		if (bigJumpTwoCount == 0)
+//		    curScore += singleStoneCnt * single_stone;
 		
 		if (first) {
             evalMapsBlack.get(numPos).put(line, curScore);

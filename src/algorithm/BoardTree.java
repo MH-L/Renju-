@@ -40,10 +40,11 @@ public class BoardTree {
 	
 	public static int alphaBetaMem(UnrestrictedBoard bd, int depth, int alpha, 
 			int beta, boolean maximizing, int[] value, int lastMove, int proceededDepth, boolean useControl) {
-	    if (cachedLocs.contains(bd.getZobristHash()) && value[0] != SPECIAL_HEURISTIC) {
-            value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
-            return -1;
-        }
+	    // TODO temporarily comment out for new balanced evaluation framework
+//	    if (cachedLocs.contains(bd.getZobristHash()) && value[0] != SPECIAL_HEURISTIC) {
+//            value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
+//            return -1;
+//        }
 
         if (value[0] == SPECIAL_HEURISTIC)
             value[0] = 0;
@@ -51,7 +52,8 @@ public class BoardTree {
 		if (depth == 0) {
 			nodesNum++;
 			value[0] = bd.getHeuristics();
-			return -1;
+			// A normal terminal node; don't return yet
+//			return -1;
 		}
 		
 		if ((lastMove >= 0 && bd.checkWinningLite(lastMove, !maximizing)) || 
@@ -73,7 +75,7 @@ public class BoardTree {
 		// hard since we may use global refutation so that threats are to be 
 		// dealt with in later moves.
 		int[] blocking = new int[]{0};
-		if (lastMove >= 0 && bd.formedThreat(!maximizing, lastMove, blocking)) {
+		if (depth > 0 && lastMove >= 0 && bd.formedThreat(!maximizing, lastMove, blocking)) {
 			int onlyMove = blocking[0];
 			bd.updateBoard(onlyMove, maximizing);
 			alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, onlyMove, proceededDepth + 1, useControl);
@@ -82,24 +84,28 @@ public class BoardTree {
 		}
 		
 		Set<Integer> nextMoves = new HashSet<>();
-		// TODO expect ~30% speedup if find all threes could be further optimized
-		Set<Integer> allThrees = bd.findAllThrees(!maximizing);
-		if (!allThrees.isEmpty()) {
-			Map<Integer, Integer> thLocations = bd.findThreatLocation(maximizing);
-			nextMoves = allThrees;
-			nextMoves.addAll(thLocations.keySet());
-			if (proceededDepth == 0)
-                System.out.println("opponent has threes: " + allThrees.size());
-		} else {
-			nextMoves = bd.nextMoves();
-		}
+		if (depth > 0) { // Only do this for non-leaf nodes
+            // TODO expect ~30% speedup if find all threes could be further optimized -- still not done yet
+            Set<Integer> allThrees = bd.findAllThrees(!maximizing);
+            if (!allThrees.isEmpty()) {
+                Map<Integer, Integer> thLocations = bd.findThreatLocation(maximizing);
+                nextMoves = allThrees;
+                nextMoves.addAll(thLocations.keySet());
+                if (proceededDepth == 0)
+                    System.out.println("opponent has threes: " + allThrees.size());
+            } else {
+                nextMoves = bd.nextMoves();
+            }
+        } else {
+		    nextMoves = bd.nextMoves(); // For normal leaf nodes
+        }
 		
 		// Sort next moves based on increment of heuristic function in descending order
 		// (larger heuristic improvements will be checked earlier)
 		
 		if (nextMoves.isEmpty()) {
 			if (bd.boardFull()) {
-				value[0] = bd.getHeuristics();
+				value[0] = 0; // fix here: what would you expect other than 0 if the board is full?!
 				return -1;
 			} else {
 				return bd.getFirstRandomMove();
@@ -110,8 +116,6 @@ public class BoardTree {
 		Map<Integer, Integer> incMap = new HashMap<>();
 		for (int mv : nextMoves) {
 			int inc = bd.getInc(mv, maximizing);
-			// TODO best-looking moves are checked (Allis, 1994)
-			// TODO inc function might be buggy
 			if (inc >= 0) {
 				nmsorted.add(mv);
 				incMap.put(mv, inc);
@@ -121,7 +125,6 @@ public class BoardTree {
 		nmsorted.sort(new Comparator<Integer>() {
 			@Override
 			public int compare(Integer o1, Integer o2) {
-				// TODO Auto-generated method stub
 				int v1 = incMap.get(o1);
 				int v2 = incMap.get(o2);
 				if (v1 == v2)
@@ -134,6 +137,13 @@ public class BoardTree {
 			nmsorted.addAll(nextMoves);
 		
 		Integer maxInc = incMap.get(nmsorted.get(0));
+		if (depth == 0) {
+		    // Since maxInc is in terms of the side to play, treat it differently in both cases
+            // TODO consider decaying the value of the evaluation for the opponent since it has one less layer
+            value[0] = maximizing ? 2 * bd.getHeuristics() + maxInc : 2 * bd.getHeuristics() - maxInc;
+            return -1; // Can't give an answer in terms of the best thing to do since the node is leaf
+        }
+
 		if (maxInc != null && maxInc >= AbstractBoard.winning_score / 2) {
 			value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
 			return nmsorted.get(0);

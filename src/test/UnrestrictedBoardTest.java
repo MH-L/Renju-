@@ -113,4 +113,17 @@ public class UnrestrictedBoardTest {
 		assertEquals(blocking[0], 68);
 		bd.render();
 	}
+
+	@Test
+    public void testGetInc() {
+	    bd.updateBoard(112, true);
+//	    bd.updateBoard(128, false);
+//	    bd.updateBoard(114, true);
+//	    bd.updateBoard(113, false);
+//	    bd.updateBoard(98, true);
+//	    bd.updateBoard(82, false);
+//	    bd.updateBoard(126, true);
+	    bd.render();
+	    System.out.println(bd.getInc(128, false));
+    }
 }

@@ -104,7 +104,7 @@ public class EvalCache {
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split("\\|");
                 returnVal.put(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
-                criticalMap.put(Integer.parseInt(parts[0]), (byte) (Integer.parseInt(parts[2] + Integer.parseInt(parts[3]) * 4)));
+                criticalMap.put(Integer.parseInt(parts[0]), (byte) (Integer.parseInt(parts[2]) + Integer.parseInt(parts[3]) * 4));
             }
         } catch (IOException e) {
             e.printStackTrace();
