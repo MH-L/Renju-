@@ -66,7 +66,8 @@ public class BoardTree {
 			value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
 			return winningMove;
 		}
-		
+
+		// TODO control branching factor based on the current heuristics
 		// TODO prune next move if the opponent has threats of fours and threes
 		// Note that the former is easy, as implemented below; but the latter is
 		// hard since we may use global refutation so that threats are to be 
@@ -81,6 +82,7 @@ public class BoardTree {
 		}
 		
 		Set<Integer> nextMoves = new HashSet<>();
+		// TODO expect ~30% speedup if find all threes could be further optimized
 		Set<Integer> allThrees = bd.findAllThrees(!maximizing);
 		if (!allThrees.isEmpty()) {
 			Map<Integer, Integer> thLocations = bd.findThreatLocation(maximizing);

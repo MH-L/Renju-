@@ -39,8 +39,9 @@ public abstract class AbstractBoard {
 	protected static final int closed_three = 4;
 	protected static final int cjump_three = 3;
 	protected static final int open_two = 5;
-	protected static final int small_jump_two = 2;
-	protected static final int big_jump_two = 1;
+	protected static final int small_jump_two = 3;
+	protected static final int big_jump_two = 2;
+	protected static final int single_stone = 1;
 	
 	protected int[] rowBased;
 	protected int[] rowBasedEval;
@@ -476,7 +477,7 @@ public abstract class AbstractBoard {
      * @return heuristic of the line
      */
 	public static int evaluateLine(int line, int numPos, boolean first, int[] criticalKind, boolean confidence) {
-		// TODO corner cases: pattern at the ends
+		// TODO single-stone pattern might need to be taken into consideration
 		// If less than 5 positions, no value
 		if (numPos < 5)
 			return 0;
@@ -543,6 +544,8 @@ public abstract class AbstractBoard {
 		String patOpenTwo = first ? "003300" : "002200";
 		String patSJTwo = first ? "0030300" : "0020200";
 		String patBJTwo = first ? "030030" : "020020";
+		String patSingleStone = first ? "000300" : "000200";
+		String patSingleStone2 = first ? "003000" : "002000";
 		
 		// If already won or will be winning, return corresponding scores
 		// "X0XXX0X" is a special kind, which counts as an open four
@@ -631,9 +634,25 @@ public abstract class AbstractBoard {
 			startPos ++;
 			bigJumpTwoCount ++;
 		}
+
+		startPos = 0;
+		int singleStoneCnt = 0;
+		while ((startPos = base4Str.indexOf(patSingleStone, startPos)) != -1) {
+		    startPos++;
+		    singleStoneCnt++;
+        }
+
+        startPos = 0;
+        while ((startPos = base4Str.indexOf(patSingleStone2, startPos)) != -1) {
+            startPos++;
+            singleStoneCnt++;
+        }
 		
 		curScore += openTwoCount * open_two + smallJumpTwoCount * small_jump_two
 				+ bigJumpTwoCount * big_jump_two;
+
+		if (bigJumpTwoCount == 0)
+		    curScore += singleStoneCnt * single_stone;
 		
 		if (first) {
             evalMapsBlack.get(numPos).put(line, curScore);

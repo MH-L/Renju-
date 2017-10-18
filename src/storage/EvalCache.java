@@ -71,6 +71,7 @@ public class EvalCache {
 
     private static void writeEvals(Map<Integer, Integer> evals, Map<Integer, Byte> criticals, int length, boolean isFirst) {
         try {
+            System.out.println("Writing evals: " + length + ", " + isFirst);
             String side = isFirst ? "black" : "white";
             PrintWriter pr = new PrintWriter(evalDir + File.separator + String.format(fileNameTemplate, side, length));
             for (Map.Entry<Integer, Integer> entry : evals.entrySet()) {
