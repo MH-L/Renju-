@@ -8,10 +8,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
-import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 import model.AbstractBoard;
 import model.AbstractGame;
@@ -28,6 +25,7 @@ public class BoardGraphics extends JPanel {
 	private AbstractGame game;
 	private boolean activated = false;
 	private Coordinate[][] grid;
+	private int moveNum = 0;
 	
 	public enum Stone {
 		UNOCCUPIED, FIRST, SECOND
@@ -72,7 +70,6 @@ public class BoardGraphics extends JPanel {
 								square.setStone(false);
 								bd.updateBoard(playerMove, false);
 							}
-							bd.addMoveToSequence(playerMove);
 							if (bd.someoneWins()) {
 								game.displayWinnerInfo(true);
 								game.afterGameCleanup(0);
@@ -106,16 +103,15 @@ public class BoardGraphics extends JPanel {
 		int rowIdx = move / width;
 		int colIdx = move % width;
 		grid[rowIdx][colIdx].setStone(first);
-		bd.addMoveToSequence(move);
 		if (bd.someoneWins()) {
 			game.displayWinnerInfo(false);
 			game.afterGameCleanup(1);
-			reset();
+//			reset();
 			return 1;
 		} else if (bd.boardFull()) {
 			game.displayTieMessageBoardFull();
 			game.afterGameCleanup(2);
-			reset();
+//			reset();
 			return 2;
 		}
 		
@@ -130,6 +126,7 @@ public class BoardGraphics extends JPanel {
 			}
 		}
 		bd.reset();
+		moveNum = 0;
 	}
 	
 	public void activate() {
@@ -169,11 +166,14 @@ public class BoardGraphics extends JPanel {
 				game.errorRendering();
 			}
 			stone = isFirst ? Stone.FIRST : Stone.SECOND;
-		}
-		
-		public void resetSq() {
-			setIcon(null);
-			stone = Stone.UNOCCUPIED;
+			this.setVerticalTextPosition(SwingConstants.CENTER);
+			this.setHorizontalTextPosition(SwingConstants.CENTER);
+			this.setText(String.valueOf(moveNum));
+			if (isFirst)
+                this.setForeground(Color.WHITE);
+			else
+			    this.setForeground(Color.black);
+			moveNum++;
 		}
 
 		public Stone getStone() {
@@ -215,6 +215,7 @@ public class BoardGraphics extends JPanel {
 		public void reset() {
 			this.stone = Stone.UNOCCUPIED;
 			this.setIcon(null);
+			this.setText(null);
 		}
 	}
 

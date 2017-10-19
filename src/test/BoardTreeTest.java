@@ -186,10 +186,18 @@ public class BoardTreeTest {
 		Main.machineLearningSetup();
 		bd.render();
 		int[] value = new int[] {0};
-        System.out.println(BoardTree.alphaBetaCustom(bd, 8, Integer.MIN_VALUE, Integer.MAX_VALUE, false, value,98, 3,3,0, false));
+        System.out.println(BoardTree.alphaBetaCustom(bd, 8, Integer.MIN_VALUE, Integer.MAX_VALUE, false, value, 3,3,0, false, false));
         System.out.println("Final output value: " + value[0]);
         value[0] = 0;
-        System.out.println(BoardTree.alphaBetaMem(bd, 4, Integer.MIN_VALUE, Integer.MAX_VALUE, false, value, 0, 0, false));
+        System.out.println(BoardTree.alphaBetaMem(bd, 4, Integer.MIN_VALUE, Integer.MAX_VALUE, false, value, 0, false, false));
         System.out.println("Final output value from mem: " + value[0]);
 	}
+
+	@Test
+    public void testSomethingRelatedToThreats() {
+	    bd.reset();
+	    updateBoardInBatchFromEmpty(bd, 96, 97, 111, 81, 113, 110, 127, 95, 141, 155, 125, 126, 109, 157, 143, 158, 159);
+	    bd.render();
+	    BoardTree.alphaBeta(bd, 8, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
+    }
 }

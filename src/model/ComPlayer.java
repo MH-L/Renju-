@@ -72,7 +72,7 @@ public class ComPlayer extends AbstractPlayer {
 				return blocking[0];
 			}
 
-			return BoardTree.alphaBeta(gameBoard, 11, Integer.MIN_VALUE, Integer.MAX_VALUE, isComFirst);
+			return BoardTree.alphaBeta(gameBoard, 12, Integer.MIN_VALUE, Integer.MAX_VALUE, isComFirst);
         case custom:
             blocking = new int[]{0};
             threatSearch = BoardTree.threatSpaceSearchV2(gameBoard, 40, isComFirst, blocking, new int[]{0});
@@ -86,8 +86,8 @@ public class ComPlayer extends AbstractPlayer {
                 return blocking[0];
             }
 
-            return BoardTree.alphaBetaCustom(gameBoard, 12, Integer.MIN_VALUE,
-                    Integer.MAX_VALUE, isComFirst, new int[]{0}, lastMove, oscillation, selectionThreshold, 0, true);
+            return BoardTree.alphaBetaCustom(gameBoard, 10, Integer.MIN_VALUE,
+                    Integer.MAX_VALUE, isComFirst, new int[]{0}, oscillation, selectionThreshold, 0, true, true);
 		default:
 			blocking = new int[]{0};
 			threatSearch = BoardTree.threatSpaceSearchV2(gameBoard, 25, isComFirst, blocking, new int[]{0});
@@ -98,8 +98,8 @@ public class ComPlayer extends AbstractPlayer {
 				return blocking[0];
 			}
 
-			return BoardTree.alphaBetaCustom(gameBoard, 8, Integer.MIN_VALUE,
-					Integer.MAX_VALUE, isComFirst, new int[]{0}, lastMove, oscillation, selectionThreshold, 0, false);
+			return BoardTree.alphaBetaCustom(gameBoard, 9, Integer.MIN_VALUE,
+					Integer.MAX_VALUE, isComFirst, new int[]{0}, oscillation, selectionThreshold, 0, false, false);
 		}
 	}
 

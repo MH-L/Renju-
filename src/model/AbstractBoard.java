@@ -181,6 +181,7 @@ public abstract class AbstractBoard {
 
         // After everything gets updated, update heuristics as well.
         updateHeuristics(location);
+        moveSequence.add(location);
 		return true;
 	}
 	
@@ -640,6 +641,7 @@ public abstract class AbstractBoard {
 			bigJumpTwoCount ++;
 		}
 
+		// Taking into account single stones turns out to be harmful
 //		startPos = 0;
 //		int singleStoneCnt = 0;
 //		while ((startPos = base4Str.indexOf(patSingleStone, startPos)) != -1) {
@@ -841,6 +843,7 @@ public abstract class AbstractBoard {
 
 		// After proper withdrawal, update heuristics as well
         updateHeuristics(move);
+        moveSequence.remove((Integer) move);
 	}
 	
 	public boolean checkWinningLite(int move, boolean first) {
@@ -964,6 +967,7 @@ public abstract class AbstractBoard {
 	 * @return
 	 */
 	private int lineHasFour(int line, int numPos, boolean first) {
+	    // TODO use this function to pre-cache threes and fours
 		if (numPos < 5)
 			return -2;
 		
@@ -1347,10 +1351,6 @@ public abstract class AbstractBoard {
 	}
 	
 	public abstract boolean someoneWins();
-	
-	public void addMoveToSequence(int move) {
-		moveSequence.add(move);
-	}
 	
 	public int getMostRecentMove() {
 		return moveSequence.isEmpty() ? -1 : moveSequence.get(moveSequence.size() - 1);

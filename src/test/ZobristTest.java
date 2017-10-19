@@ -35,7 +35,7 @@ public class ZobristTest {
         LocalStorage.writeInitialSeed();
         Main.machineLearningSetup();
         UnrestrictedCvCGame experiment = new UnrestrictedCvCGame(new UnrestrictedBoard(),
-                AbstractGame.Difficulty.custom, AbstractGame.Difficulty.ultimate);
+                AbstractGame.Difficulty.ultimate, AbstractGame.Difficulty.custom);
 
         // TODO after controlling experiment change it back
         experiment.setCustomAIParams(3, 0);

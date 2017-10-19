@@ -45,7 +45,7 @@ public abstract class AbstractGame {
 	protected static final Font tinyGameFont = new Font("Segoe UI",
 			Font.PLAIN, 16);
 	public static final Insets emptyMargin = new Insets(0, 0, 0, 0);
-	public static final Color boardColor = new Color(204, 204, 0);
+	public static final Color boardColor = new Color(255, 242, 0);
 	public static final Dimension defaultFrameDimension = new Dimension(1400,
 			760);
 	public static final Dimension defaultFrameSmall = new Dimension(700, 500);
@@ -305,6 +305,7 @@ public abstract class AbstractGame {
 		String winnerInfo = isPlayer ? "Player" : "Computer";
 		JOptionPane.showMessageDialog(null, winnerInfo + " wins!",
 				"Game Over", JOptionPane.INFORMATION_MESSAGE);
+		reset();
 	}
 
 	public void warnGameFrozen() {
@@ -340,6 +341,10 @@ public abstract class AbstractGame {
 		    }
 		});
 	}
+
+	public void reset() {
+	    gameStarted.setText("Game Not Started Yet.");
+    }
 	
 	protected void gameStart() {
 		bg.reset();

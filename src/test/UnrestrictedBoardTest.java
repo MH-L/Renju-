@@ -112,6 +112,16 @@ public class UnrestrictedBoardTest {
 		assertTrue(bd.formedThreat(true, 54, blocking));
 		assertEquals(blocking[0], 68);
 		bd.render();
+		bd.reset();
+		bd.updateBoard(112, true);
+		bd.updateBoard(114, false);
+		bd.updateBoard(128, true);
+		bd.updateBoard(144, false);
+		bd.updateBoard(96, true);
+		bd.updateBoard(99, false);
+		bd.updateBoard(64, true);
+		assertTrue(bd.formedThreat(true, 128, new int[]{0}));
+		bd.render();
 	}
 
 	@Test

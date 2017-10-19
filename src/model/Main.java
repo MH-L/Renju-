@@ -252,7 +252,7 @@ public class Main {
 				Difficulty firstDiff = null;
 				Difficulty secondDiff = null;
 				if (noviceDiffOption.isSelected())
-					firstDiff = Difficulty.novice;
+					firstDiff = Difficulty.custom;
 				else if (intermediateDiffOption.isSelected())
 					firstDiff = Difficulty.intermediate;
 				else if (advancedDiffOption.isSelected())
@@ -261,7 +261,7 @@ public class Main {
 					firstDiff = Difficulty.ultimate;
 				
 				if (noviceForWhite.isSelected())
-					secondDiff = Difficulty.novice;
+					secondDiff = Difficulty.custom;
 				else if (intermediateForWhite.isSelected())
 					secondDiff = Difficulty.intermediate;
 				else if (advancedForWhite.isSelected())

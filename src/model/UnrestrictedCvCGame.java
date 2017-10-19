@@ -67,6 +67,8 @@ public class UnrestrictedCvCGame extends AbstractGame {
 	}
 	
 	public void runCvCGame() {
+	    // TODO pause thread?? when there is something serious (8000+ eval)
+        // TODO proper cleanup after game finished
 	    activePlayer = true;
 		while (true) {
 			int moveResult = 0;
@@ -74,14 +76,14 @@ public class UnrestrictedCvCGame extends AbstractGame {
 				int comMove = com1.makeMove();
 				moveResult = bg.updateComMove(comMove, true);
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(2000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			} else {
 				int comMove = com2.makeMove();
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(2000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -124,7 +126,6 @@ public class UnrestrictedCvCGame extends AbstractGame {
 				board.updateBoard(comMove, true);
 				board.updateHash(comMove, true);
                 System.out.println("Computer 1 Move: " + comMove);
-                board.addMoveToSequence(comMove);
                 if (board.someoneWins()) {
                     moveResult = 1;
                 } else if (board.boardFull()) {
@@ -136,7 +137,6 @@ public class UnrestrictedCvCGame extends AbstractGame {
 				board.updateBoard(comMove, false);
 				board.updateHash(comMove, false);
                 System.out.println("Computer 2 Move: " + comMove);
-                board.addMoveToSequence(comMove);
                 if (board.someoneWins()) {
                     moveResult = 2;
                 } else if (board.boardFull()) {

@@ -18,7 +18,7 @@ public class BoardTree {
 	private static final int MAX_BIAS = 50;
 	public static Map<Long, StatObj> statMap = new HashMap<>();
 	public static Set<Long> cachedLocs = new HashSet<>();
-	private static int[] branchingControl = {100, 15, 7, 6, 5, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
+	private static int[] branchingControl = {100, 15, 9, 7, 6, 6, 5, 5, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
 
 	// Meant to distinguish calls from outside from recursive calls.
 	public static final int SPECIAL_HEURISTIC = 1000000001;
@@ -35,11 +35,13 @@ public class BoardTree {
 	 */
 	public static int alphaBeta(UnrestrictedBoard bd, int depth, int alpha, 
 			int beta, boolean maximizing) {
-		return alphaBetaMem(bd, depth, alpha, beta, maximizing, new int[]{SPECIAL_HEURISTIC}, -1, 0, true);
+	    // LMH_Note here the balanced evaluation isn't used.
+        // TODO configure here - useControl and useBalanced
+		return alphaBetaMem(bd, depth, alpha, beta, maximizing, new int[]{SPECIAL_HEURISTIC}, 0, false, true);
 	}
 	
 	public static int alphaBetaMem(UnrestrictedBoard bd, int depth, int alpha, 
-			int beta, boolean maximizing, int[] value, int lastMove, int proceededDepth, boolean useControl) {
+			int beta, boolean maximizing, int[] value, int proceededDepth, boolean useControl, boolean useBalanced) {
 	    // TODO temporarily comment out for new balanced evaluation framework
 //	    if (cachedLocs.contains(bd.getZobristHash()) && value[0] != SPECIAL_HEURISTIC) {
 //            value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
@@ -49,13 +51,14 @@ public class BoardTree {
         if (value[0] == SPECIAL_HEURISTIC)
             value[0] = 0;
 
-		if (depth == 0) {
+		if (depth == 0 && !useBalanced) {
 			nodesNum++;
 			value[0] = bd.getHeuristics();
 			// A normal terminal node; don't return yet
-//			return -1;
+			return -1;
 		}
-		
+
+		int lastMove = bd.getMostRecentMove();
 		if ((lastMove >= 0 && bd.checkWinningLite(lastMove, !maximizing)) || 
 				bd.someoneWins()) {
 			nodesNum++;
@@ -77,8 +80,10 @@ public class BoardTree {
 		int[] blocking = new int[]{0};
 		if (depth > 0 && lastMove >= 0 && bd.formedThreat(!maximizing, lastMove, blocking)) {
 			int onlyMove = blocking[0];
-			bd.updateBoard(onlyMove, maximizing);
-			alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, onlyMove, proceededDepth + 1, useControl);
+			if (proceededDepth == 0)
+                System.out.println("Opponent has four; blocking move: " + onlyMove);
+            bd.updateBoard(onlyMove, maximizing);
+			alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, proceededDepth + 1, useControl, useBalanced);
 			bd.withdrawMove(onlyMove);
 			return onlyMove;
 		}
@@ -91,8 +96,6 @@ public class BoardTree {
                 Map<Integer, Integer> thLocations = bd.findThreatLocation(maximizing);
                 nextMoves = allThrees;
                 nextMoves.addAll(thLocations.keySet());
-                if (proceededDepth == 0)
-                    System.out.println("opponent has threes: " + allThrees.size());
             } else {
                 nextMoves = bd.nextMoves();
             }
@@ -160,7 +163,7 @@ public class BoardTree {
 			    count++;
 				bd.updateBoard(move, maximizing);
 				nodesNum++;
-				alphaBetaMem(bd, depth-1, alpha, beta, !maximizing, value, move, proceededDepth + 1, useControl);
+				alphaBetaMem(bd, depth-1, alpha, beta, !maximizing, value, proceededDepth + 1, useControl, useBalanced);
 				if (value[0] > maxVal) {
 					maxVal = value[0];
 					bestMove = move;
@@ -183,7 +186,7 @@ public class BoardTree {
 			    count++;
 				bd.updateBoard(move, maximizing);
 				nodesNum++;
-				alphaBetaMem(bd, depth-1, alpha, beta, !maximizing, value, move, proceededDepth + 1, useControl);
+				alphaBetaMem(bd, depth-1, alpha, beta, !maximizing, value, proceededDepth + 1, useControl, useBalanced);
 				if (value[0] < minVal) {
 					minVal = value[0];
 					bestMove = move;
@@ -201,8 +204,8 @@ public class BoardTree {
 	}
 	
 	public static int alphaBetaCustom(UnrestrictedBoard bd, int depth, int alpha, 
-			int beta, boolean maximizing, int[] value, int lastMove, 
-			int evalOscillation, int selectionThreshold, int levelToRoot, boolean useControl) {
+			int beta, boolean maximizing, int[] value,
+			int evalOscillation, int selectionThreshold, int levelToRoot, boolean useControl, boolean useBalanced) {
         if (cachedLocs.contains(bd.getZobristHash()) && levelToRoot != 0) {
             value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
             System.out.println("This is saved by me.");
@@ -214,6 +217,8 @@ public class BoardTree {
 			value[0] = bd.getHeuristics();
 			return -1;
 		}
+
+		int lastMove = bd.getMostRecentMove();
 		
 		if ((lastMove >= 0 && bd.checkWinningLite(lastMove, !maximizing)) || 
 				bd.someoneWins()) {
@@ -232,7 +237,7 @@ public class BoardTree {
 		if (lastMove >= 0 && bd.formedThreat(!maximizing, lastMove, blocking)) {
 			int onlyMove = blocking[0];
 			bd.updateBoard(onlyMove, maximizing);
-			alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, onlyMove, 1, useControl);
+			alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, 1, useControl, useBalanced);
 			bd.withdrawMove(onlyMove);
 			return onlyMove;
 		}
@@ -243,7 +248,6 @@ public class BoardTree {
 			Map<Integer, Integer> thLocations = bd.findThreatLocation(maximizing);
 			nextMoves = allThrees;
 			nextMoves.addAll(thLocations.keySet());
-            System.out.println("opponent has threes: " + allThrees.size());
         } else {
 			nextMoves = bd.getStoneCount() > 3 ? bd.nextMoves() : bd.nextMovesRed();
 		}
@@ -271,7 +275,6 @@ public class BoardTree {
 		nmsorted.sort(new Comparator<Integer>() {
 			@Override
 			public int compare(Integer o1, Integer o2) {
-				// TODO Auto-generated method stub
 				int v1 = incMap.get(o1);
 				int v2 = incMap.get(o2);
 				if (v1 == v2)
@@ -296,12 +299,11 @@ public class BoardTree {
 			// case for black
 			int maxVal = Integer.MIN_VALUE;
 			for (int move : nmsorted) {
-                System.out.println("Current move inc: " + incMap.get(move));
                 bd.updateBoard(move, maximizing);
 				bd.updateHash(move, maximizing);
 				nodesNum++;
 //				alphaBetaCustom(bd, depth-1, alpha, beta, !maximizing, value, move, evalOscillation, selectionThreshold, levelToRoot + 1);
-				alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, move, 1, useControl);
+				alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, 1, useControl, useBalanced);
 				if (levelToRoot == 0) {
 				    // sway the value
                     value[0] = value[0] + new Random().nextInt(2*evalOscillation + 1) - evalOscillation;
@@ -313,10 +315,11 @@ public class BoardTree {
 					bestMove = move;
 				}
 
-                System.out.println("After oscillation: " + value[0]);
 				bd.withdrawMove(move);
-                System.out.println("Cur move heu: " + value[0]);
-				// Just re-apply XOR operation to restore the hash.
+                System.out.println("Cur move heu: " + value[0] + ", move: " + move);
+                if (value[0] >= 1500)
+                    System.out.println("Cur move: " + move);
+                // Just re-apply XOR operation to restore the hash.
 				bd.updateHash(move, maximizing);
 				alpha = Math.max(alpha, maxVal);
 				if (beta <= alpha)
@@ -331,7 +334,7 @@ public class BoardTree {
                 bd.updateHash(move, maximizing);
 				nodesNum++;
 //				alphaBetaCustom(bd, depth-1, alpha, beta, !maximizing, value, move, evalOscillation, selectionThreshold, levelToRoot + 1);
-				alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, move, 1, useControl);
+				alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, 1, useControl, useBalanced);
 				if (levelToRoot == 0) {
                     // sway the value
                     value[0] = value[0] + new Random().nextInt(2*evalOscillation + 1) - evalOscillation;
