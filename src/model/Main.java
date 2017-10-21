@@ -271,7 +271,7 @@ public class Main {
 				
 				optionWindow.dispose();
 				welcomeFrame.dispose();
-				new UnrestrictedCvCGame(firstDiff, secondDiff);
+				new UnrestrictedCvCGame(new UnrestrictedBoard(), firstDiff, secondDiff);
 			}
 		});
 	}

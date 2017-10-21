@@ -86,7 +86,7 @@ public class ComPlayer extends AbstractPlayer {
                 return blocking[0];
             }
 
-            return BoardTree.alphaBetaCustom(gameBoard, 10, Integer.MIN_VALUE,
+            return BoardTree.alphaBetaCustom(gameBoard, 8, Integer.MIN_VALUE,
                     Integer.MAX_VALUE, isComFirst, new int[]{0}, oscillation, selectionThreshold, 0, true, true);
 		default:
 			blocking = new int[]{0};

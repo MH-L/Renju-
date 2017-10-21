@@ -72,6 +72,7 @@ public class UnrestrictedCvCGame extends AbstractGame {
 	    activePlayer = true;
 		while (true) {
 			int moveResult = 0;
+			BoardTree.nodesNum = 0;
 			if (activePlayer) {
 				int comMove = com1.makeMove();
 				moveResult = bg.updateComMove(comMove, true);

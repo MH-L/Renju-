@@ -64,6 +64,7 @@ public abstract class AbstractGame {
 	protected JPanel buttonPanel;
 	protected JPanel functionPanel;
 	protected JLabel gameStarted;
+	private static JLabel nodeCount;
 	protected JTextArea messageArea;
 	protected BoardGraphics bg;
 	
@@ -124,6 +125,9 @@ public abstract class AbstractGame {
 		gameStarted = new JLabel("Game not yet started.");
 		gameStarted.setFont(smallGameFont);
 		historyPanel.add(gameStarted);
+		nodeCount = new JLabel("Node count: ");
+		nodeCount.setFont(smallGameFont);
+		historyPanel.add(nodeCount);
 
 		bg = new BoardGraphics(AbstractBoard.height, AbstractBoard.width, this);
 		bg.setPreferredSize(new Dimension(700, 700));
@@ -143,6 +147,10 @@ public abstract class AbstractGame {
 		addStartButtonListener(btnStart);
 		addToFileListener(btnToFile);
 	}
+
+	public static void updateNodeCount(long nCount) {
+	    nodeCount.setText("Node count: " + (nCount / 1000) + "k");
+    }
 	
 	protected void addStartButtonListener(JButton btn) {
 		btn.addActionListener(new ActionListener() {

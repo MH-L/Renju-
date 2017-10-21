@@ -200,4 +200,17 @@ public class BoardTreeTest {
 	    bd.render();
 	    BoardTree.alphaBeta(bd, 8, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
     }
+
+    @Test
+    public void testReallyNonsense() {
+	    bd.reset();
+	    updateBoardInBatchFromEmpty(bd, 96, 110, 111, 81, 80, 142, 112, 128, 64, 48,
+                94, 95, 125, 139, 66, 52, 123, 122, 109, 79,
+                141, 157, 67, 65, 114, 113, 97, 82, 83, 69,
+                126, 156);
+	    bd.render();
+	    int whiteOptimal = BoardTree.alphaBetaCustom(bd, 10, Integer.MIN_VALUE,
+                Integer.MAX_VALUE, true, new int[]{0}, 0, 0, 0, true, true);
+        System.out.println(whiteOptimal);
+    }
 }

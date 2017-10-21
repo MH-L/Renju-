@@ -10,6 +10,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
+import algorithm.BoardTree;
 import model.AbstractBoard;
 import model.AbstractGame;
 
@@ -106,11 +107,13 @@ public class BoardGraphics extends JPanel {
 		if (bd.someoneWins()) {
 			game.displayWinnerInfo(false);
 			game.afterGameCleanup(1);
+            BoardTree.nodesNum = 0;
 //			reset();
 			return 1;
 		} else if (bd.boardFull()) {
 			game.displayTieMessageBoardFull();
 			game.afterGameCleanup(2);
+			BoardTree.nodesNum = 0;
 //			reset();
 			return 2;
 		}

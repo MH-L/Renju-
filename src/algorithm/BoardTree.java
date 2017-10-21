@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import model.AbstractBoard;
+import model.AbstractGame;
 import model.UnrestrictedBoard;
 
 public class BoardTree {
@@ -18,7 +19,7 @@ public class BoardTree {
 	private static final int MAX_BIAS = 50;
 	public static Map<Long, StatObj> statMap = new HashMap<>();
 	public static Set<Long> cachedLocs = new HashSet<>();
-	private static int[] branchingControl = {100, 15, 9, 7, 6, 6, 5, 5, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
+	private static int[] branchingControl = {100, 15, 12, 10, 8, 7, 6, 5, 5, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3};
 
 	// Meant to distinguish calls from outside from recursive calls.
 	public static final int SPECIAL_HEURISTIC = 1000000001;
@@ -37,11 +38,12 @@ public class BoardTree {
 			int beta, boolean maximizing) {
 	    // LMH_Note here the balanced evaluation isn't used.
         // TODO configure here - useControl and useBalanced
-		return alphaBetaMem(bd, depth, alpha, beta, maximizing, new int[]{SPECIAL_HEURISTIC}, 0, false, true);
+		return alphaBetaMem(bd, depth, alpha, beta, maximizing, new int[]{SPECIAL_HEURISTIC}, 0, true, false);
 	}
 	
 	public static int alphaBetaMem(UnrestrictedBoard bd, int depth, int alpha, 
 			int beta, boolean maximizing, int[] value, int proceededDepth, boolean useControl, boolean useBalanced) {
+	    // This is now the main alpha-beta function. Both other two depend on this one.
 	    // TODO temporarily comment out for new balanced evaluation framework
 //	    if (cachedLocs.contains(bd.getZobristHash()) && value[0] != SPECIAL_HEURISTIC) {
 //            value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
@@ -51,7 +53,8 @@ public class BoardTree {
         if (value[0] == SPECIAL_HEURISTIC)
             value[0] = 0;
 
-		if (depth == 0 && !useBalanced) {
+        // Quiescent search makes some negative depths
+		if (depth <= 0 && !useBalanced) {
 			nodesNum++;
 			value[0] = bd.getHeuristics();
 			// A normal terminal node; don't return yet
@@ -68,7 +71,8 @@ public class BoardTree {
 		
 		int winningMove = bd.canWinNextMove(maximizing);
 		if (winningMove >= 0) {
-			value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
+		    // Give rewards for quicker wins
+			value[0] = maximizing ? AbstractBoard.winning_score + 2 * depth : -AbstractBoard.winning_score - 2 * depth;
 			return winningMove;
 		}
 
@@ -80,8 +84,8 @@ public class BoardTree {
 		int[] blocking = new int[]{0};
 		if (depth > 0 && lastMove >= 0 && bd.formedThreat(!maximizing, lastMove, blocking)) {
 			int onlyMove = blocking[0];
-			if (proceededDepth == 0)
-                System.out.println("Opponent has four; blocking move: " + onlyMove);
+//			if (proceededDepth == 0)
+//                System.out.println("Opponent has four; blocking move: " + onlyMove);
             bd.updateBoard(onlyMove, maximizing);
 			alphaBetaMem(bd, depth - 1, alpha, beta, !maximizing, value, proceededDepth + 1, useControl, useBalanced);
 			bd.withdrawMove(onlyMove);
@@ -107,8 +111,9 @@ public class BoardTree {
 		// (larger heuristic improvements will be checked earlier)
 		
 		if (nextMoves.isEmpty()) {
+		    nodesNum++;
 			if (bd.boardFull()) {
-				value[0] = 0; // fix here: what would you expect other than 0 if the board is full?!
+				value[0] = 0; // fixed here: what would you expect other than 0 if the board is full?!
 				return -1;
 			} else {
 				return bd.getFirstRandomMove();
@@ -140,15 +145,20 @@ public class BoardTree {
 			nmsorted.addAll(nextMoves);
 		
 		Integer maxInc = incMap.get(nmsorted.get(0));
-		if (depth == 0) {
+		if (depth <= 0) {
+		    nodesNum++;
 		    // Since maxInc is in terms of the side to play, treat it differently in both cases
             // TODO consider decaying the value of the evaluation for the opponent since it has one less layer
             value[0] = maximizing ? 2 * bd.getHeuristics() + maxInc : 2 * bd.getHeuristics() - maxInc;
             return -1; // Can't give an answer in terms of the best thing to do since the node is leaf
         }
 
+//        if (nodesNum % 1000 == 0)
+//            AbstractGame.updateNodeCount(nodesNum);
+
 		if (maxInc != null && maxInc >= AbstractBoard.winning_score / 2) {
-			value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
+		    // Give rewards for quicker wins
+			value[0] = maximizing ? AbstractBoard.winning_score + 2*depth : -AbstractBoard.winning_score + 2*depth;
 			return nmsorted.get(0);
 		}
 		
@@ -156,14 +166,23 @@ public class BoardTree {
 		if (maximizing) {
 			int maxVal = Integer.MIN_VALUE;
 			int count = 0;
+			int depthDecay = 1;
 			for (int move : nmsorted) {
-			    if (useControl && count > branchingControl[proceededDepth])
-			        // Branching control kicks in
-                    break;
+			    if (useControl && count > branchingControl[proceededDepth]) {
+			        // branching control kicks in
+                    // do quiescent search if balanced evaluation is used
+                    // LMH_Note experiments have shown this to be effective (i.e. either evaluation function isn't accurate or move ordering is bad)
+                    // Since branching control is used at this point, move ordering is VERY IMPORTANT (there is high chance that the latter is true)
+                    // TODO find good move ordering heuristics (maybe copy the one used by `blupig`)
+                    if (useBalanced && maxVal < -1000) // Only do quiescent search if all current move lead to doom
+                        depthDecay = 2;
+                    else
+                        break;
+                }
 			    count++;
 				bd.updateBoard(move, maximizing);
 				nodesNum++;
-				alphaBetaMem(bd, depth-1, alpha, beta, !maximizing, value, proceededDepth + 1, useControl, useBalanced);
+				alphaBetaMem(bd, depth - depthDecay, alpha, beta, !maximizing, value, proceededDepth + depthDecay, useControl, useBalanced);
 				if (value[0] > maxVal) {
 					maxVal = value[0];
 					bestMove = move;
@@ -179,14 +198,21 @@ public class BoardTree {
 		} else {
 			int minVal = Integer.MAX_VALUE;
 			int count = 0;
+			int depthDecay = 1;
 			for (int move : nmsorted) {
-                if (useControl && count > branchingControl[proceededDepth])
+                if (useControl && count > branchingControl[proceededDepth]) {
                     // Branching control kicks in
-                    break;
+                    // Explanation see above
+                    if (useBalanced && minVal > 1000)
+                        depthDecay = 2;
+                    else
+                        break;
+                }
+
 			    count++;
 				bd.updateBoard(move, maximizing);
 				nodesNum++;
-				alphaBetaMem(bd, depth-1, alpha, beta, !maximizing, value, proceededDepth + 1, useControl, useBalanced);
+				alphaBetaMem(bd, depth - depthDecay, alpha, beta, !maximizing, value, proceededDepth + depthDecay, useControl, useBalanced);
 				if (value[0] < minVal) {
 					minVal = value[0];
 					bestMove = move;
@@ -229,7 +255,8 @@ public class BoardTree {
 		
 		int winningMove = bd.canWinNextMove(maximizing);
 		if (winningMove >= 0) {
-			value[0] = maximizing ? AbstractBoard.winning_score : -AbstractBoard.winning_score;
+		    // add depth so that quicker wins get higher score
+			value[0] = maximizing ? AbstractBoard.winning_score + 2*depth : -AbstractBoard.winning_score - 2*depth;
 			return winningMove;
 		}
 
@@ -298,6 +325,7 @@ public class BoardTree {
 		if (maximizing) {
 			// case for black
 			int maxVal = Integer.MIN_VALUE;
+			boolean validated = false;
 			for (int move : nmsorted) {
                 bd.updateBoard(move, maximizing);
 				bd.updateHash(move, maximizing);
@@ -315,10 +343,18 @@ public class BoardTree {
 					bestMove = move;
 				}
 
-				bd.withdrawMove(move);
-                System.out.println("Cur move heu: " + value[0] + ", move: " + move);
-                if (value[0] >= 1500)
+                if (value[0] >= 1500) {
+                    System.out.println("Cur move heu: " + value[0]);
                     System.out.println("Cur move: " + move);
+//                    if (!validated) { // Only do validation once per move since it's too time-consuming
+//                        // Run validation without branching control
+//                        int[] validation = {0};
+//                        alphaBetaMem(bd, 7, Integer.MIN_VALUE, Integer.MAX_VALUE, !maximizing, validation, 0, false, true);
+//                        System.out.println("Cur move heu after validation: " + validation[0]);
+//                        validated = true;
+//                    }
+                }
+				bd.withdrawMove(move);
                 // Just re-apply XOR operation to restore the hash.
 				bd.updateHash(move, maximizing);
 				alpha = Math.max(alpha, maxVal);
@@ -328,8 +364,9 @@ public class BoardTree {
 		} else {
 			// case for white
 			int minVal = Integer.MAX_VALUE;
+			boolean validated = false;
 			for (int move : nmsorted) {
-                System.out.println("Current move inc: " + incMap.get(move));
+//                System.out.println("Current move inc: " + incMap.get(move));
 				bd.updateBoard(move, maximizing);
                 bd.updateHash(move, maximizing);
 				nodesNum++;
@@ -342,16 +379,27 @@ public class BoardTree {
                         value[0] = value[0] + getBias(bd.getZobristHash());
                 }
 
-                System.out.println("After oscillation: " + value[0]);
+//                System.out.println("After oscillation: " + value[0]);
                 if (value[0] < minVal) {
 					minVal = value[0];
 					bestMove = move;
 				}
+
+                if (value[0] >= 1500) {
+                    System.out.println("Cur move heu: " + value[0]);
+                    System.out.println("Cur move: " + move);
+//                    if (!validated) {
+//                        // Run validation without branching control
+//                        int[] validation = {0};
+//                        alphaBetaMem(bd, 7, Integer.MIN_VALUE, Integer.MAX_VALUE, !maximizing, validation, 0, false, true);
+//                        System.out.println("Cur move heu after validation: " + validation[0]);
+//                        validated = true;
+//                    }
+                }
 				bd.withdrawMove(move);
 				// ditto
                 bd.updateHash(move, maximizing);
 				beta = Math.min(beta, minVal);
-                System.out.println("Cur move heu: " + value[0]);
                 if (beta <= alpha)
 					break;
 			}

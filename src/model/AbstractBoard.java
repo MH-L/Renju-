@@ -1292,7 +1292,8 @@ public abstract class AbstractBoard {
 		Map<Integer, Integer> returnVal = new HashMap<>();
 		Set<Integer> possibleLocs = new HashSet<>();
 		for (int stone : selfStones) {
-			for (int adj : adjacentMapRed.get(stone)) {
+		    // LMH_Note why am I using adjacentMapRed?? That's nonsense
+			for (int adj : adjacentMap.get(stone)) {
 				if (isSquareEmpty(adj))
 					possibleLocs.add(adj);
 			}
